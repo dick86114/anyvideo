@@ -107,112 +107,143 @@ class ParseService {
   }
 
   // -------------------------------
-  // Login State Management Methods
-  // -------------------------------
+// Login State Management Methods
+// -------------------------------
 
-  // Save cookies to file
-  static async saveCookies(cookies) {
-    try {
-      await fs.writeJSON(COOKIE_STORAGE_PATH, {
-        cookies,
-        lastUpdated: new Date().toISOString()
-      });
-      console.log('Cookies saved successfully');
-    } catch (error) {
-      console.error('Error saving cookies:', error);
-    }
+/**
+ * Save cookies to file for persistent storage
+ * @param {string} cookies - The cookies string to save
+ * @returns {Promise<void>}
+ */
+static async saveCookies(cookies) {
+  try {
+    await fs.writeJSON(COOKIE_STORAGE_PATH, {
+      cookies,
+      lastUpdated: new Date().toISOString()
+    });
+    console.log('Cookies saved successfully');
+  } catch (error) {
+    console.error('Error saving cookies:', error);
   }
+}
 
-  // Load cookies from file
-  static async loadCookies() {
-    try {
-      if (await fs.pathExists(COOKIE_STORAGE_PATH)) {
-        const data = await fs.readJSON(COOKIE_STORAGE_PATH);
-        // Check if cookies are older than 24 hours
-        const lastUpdated = new Date(data.lastUpdated);
-        const now = new Date();
-        const hoursDiff = (now - lastUpdated) / (1000 * 60 * 60);
-        
-        if (hoursDiff < 24) {
-          return data.cookies;
-        } else {
-          console.log('Cookies expired, need to refresh');
-          // Attempt to refresh cookies
-          await this.refreshCookies();
-          return this.loadCookies();
-        }
+/**
+ * Load cookies from file and refresh if expired
+ * @returns {Promise<string|null>} The loaded cookies string or null if no valid cookies found
+ */
+static async loadCookies() {
+  try {
+    if (await fs.pathExists(COOKIE_STORAGE_PATH)) {
+      const data = await fs.readJSON(COOKIE_STORAGE_PATH);
+      // Check if cookies are older than 24 hours
+      const lastUpdated = new Date(data.lastUpdated);
+      const now = new Date();
+      const hoursDiff = (now - lastUpdated) / (1000 * 60 * 60);
+      
+      if (hoursDiff < 24) {
+        return data.cookies;
+      } else {
+        console.log('Cookies expired, need to refresh');
+        // Attempt to refresh cookies
+        await this.refreshCookies();
+        return this.loadCookies();
       }
-      return null;
-    } catch (error) {
-      console.error('Error loading cookies:', error);
-      return null;
     }
+    return null;
+  } catch (error) {
+    console.error('Error loading cookies:', error);
+    return null;
   }
+}
 
-  // Refresh cookies by re-logging in or using refresh token
-  static async refreshCookies() {
-    // In a real implementation, this would handle cookie refresh
-    // For now, we'll just log a message
-    console.log('Refreshing cookies...');
-    // TODO: Implement actual cookie refresh logic
-  }
+/**
+ * Refresh cookies by re-logging in or using refresh token
+ * @returns {Promise<void>}
+ */
+static async refreshCookies() {
+  // In a real implementation, this would handle cookie refresh
+  // For now, we'll just log a message
+  console.log('Refreshing cookies...');
+  // TODO: Implement actual cookie refresh logic
+}
 
-  // Generate random User-Agent for device fingerprinting
-  static getRandomUserAgent() {
-    return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
-  }
+/**
+ * Generate random User-Agent for device fingerprinting
+ * @returns {string} A random User-Agent string
+ */
+static getRandomUserAgent() {
+  return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+}
 
-  // Generate device ID for device fingerprinting
-  static generateDeviceId() {
-    // Use random device ID from pool or generate new one
-    if (Math.random() > 0.5) {
-      return DEVICE_IDS[Math.floor(Math.random() * DEVICE_IDS.length)];
-    }
-    // Generate new device ID
-    return crypto.randomUUID();
+/**
+ * Generate device ID for device fingerprinting
+ * @returns {string} A generated device ID
+ */
+static generateDeviceId() {
+  // Use random device ID from pool or generate new one
+  if (Math.random() > 0.5) {
+    return DEVICE_IDS[Math.floor(Math.random() * DEVICE_IDS.length)];
   }
+  // Generate new device ID
+  return crypto.randomUUID();
+}
 
-  // Generate timestamp for signature
-  static generateTimestamp() {
-    return Math.floor(Date.now() / 1000);
-  }
+/**
+ * Generate timestamp for signature
+ * @returns {number} A Unix timestamp in seconds
+ */
+static generateTimestamp() {
+  return Math.floor(Date.now() / 1000);
+}
 
-  // Generate signature for Xiaohongshu API requests
-  static generateSign(path, params, cookie) {
-    // Simplified signature generation - in real implementation, this would be reversed from Xiaohongshu's algorithm
-    const timestamp = this.generateTimestamp();
-    const deviceId = this.generateDeviceId();
-    
-    // Combine all parameters for signing
-    const signStr = `${path}?${new URLSearchParams(params).toString()}_${timestamp}_${deviceId}_${cookie}`;
-    
-    // Generate MD5 hash
-    const md5Sign = crypto.createHash('md5').update(signStr).digest('hex');
-    
-    return {
-      'x-t': timestamp.toString(),
-      'x-s': md5Sign,
-      'x-device-id': deviceId,
-      'User-Agent': this.getRandomUserAgent()
-    };
-  }
+/**
+ * Generate signature for Xiaohongshu API requests
+ * @param {string} path - The API path
+ * @param {Object} params - The request parameters
+ * @param {string} cookie - The cookie string
+ * @returns {Object} The generated signature headers
+ */
+static generateSign(path, params, cookie) {
+  // Simplified signature generation - in real implementation, this would be reversed from Xiaohongshu's algorithm
+  const timestamp = this.generateTimestamp();
+  const deviceId = this.generateDeviceId();
+  
+  // Combine all parameters for signing
+  const signStr = `${path}?${new URLSearchParams(params).toString()}_${timestamp}_${deviceId}_${cookie}`;
+  
+  // Generate MD5 hash
+  const md5Sign = crypto.createHash('md5').update(signStr).digest('hex');
+  
+  return {
+    'x-t': timestamp.toString(),
+    'x-s': md5Sign,
+    'x-device-id': deviceId,
+    'User-Agent': this.getRandomUserAgent()
+  };
+}
 
-  // Get compliant headers for Xiaohongshu requests
-  static async getXiaohongshuHeaders(url, path, params = {}) {
-    const cookies = await this.loadCookies() || '';
-    const signature = this.generateSign(path, params, cookies);
-    
-    return {
-      'User-Agent': signature['User-Agent'],
-      'Referer': 'https://www.xiaohongshu.com/',
-      'Cookie': cookies,
-      'Accept': 'application/json, text/plain, */*',
-      'x-t': signature['x-t'],
-      'x-s': signature['x-s'],
-      'x-device-id': signature['x-device-id'],
-      'x-requested-with': 'XMLHttpRequest'
-    };
-  }
+/**
+ * Get compliant headers for Xiaohongshu requests
+ * @param {string} url - The full URL
+ * @param {string} path - The API path
+ * @param {Object} params - The request parameters
+ * @returns {Promise<Object>} The compliant headers
+ */
+static async getXiaohongshuHeaders(url, path, params = {}) {
+  const cookies = await this.loadCookies() || '';
+  const signature = this.generateSign(path, params, cookies);
+  
+  return {
+    'User-Agent': signature['User-Agent'],
+    'Referer': 'https://www.xiaohongshu.com/',
+    'Cookie': cookies,
+    'Accept': 'application/json, text/plain, */*',
+    'x-t': signature['x-t'],
+    'x-s': signature['x-s'],
+    'x-device-id': signature['x-device-id'],
+    'x-requested-with': 'XMLHttpRequest'
+  };
+}
 
   // Parse Douyin link (mock implementation)
   static async parseDouyinLink(link) {
@@ -956,6 +987,110 @@ class ParseService {
     }
   }
 
+  // Enhanced download function with range support for large files
+  static async downloadWithRange(url, filePath, headers = {}, chunkSize = 1024 * 1024 * 5) { // 5MB chunks
+    try {
+      // Get file size first to determine if range requests are needed
+      const headResponse = await axios.head(url, {
+        headers,
+        timeout: 15000
+      });
+      
+      const fileSize = parseInt(headResponse.headers['content-length'] || '0', 10);
+      console.log(`ParseService.downloadWithRange: File size: ${fileSize} bytes, Chunk size: ${chunkSize} bytes`);
+      
+      // If file is small, use regular download
+      if (fileSize === 0 || fileSize < chunkSize) {
+        console.log('ParseService.downloadWithRange: File is small, using regular download');
+        const response = await axios.get(url, {
+          responseType: 'stream',
+          headers,
+          timeout: 60000
+        });
+        
+        return new Promise((resolve, reject) => {
+          const writer = fs.createWriteStream(filePath);
+          response.data.pipe(writer);
+          
+          writer.on('finish', resolve);
+          writer.on('error', reject);
+          response.data.on('error', reject);
+        });
+      }
+      
+      // For large files, use range requests
+      const totalChunks = Math.ceil(fileSize / chunkSize);
+      console.log(`ParseService.downloadWithRange: Downloading ${totalChunks} chunks...`);
+      
+      // Create file with proper size
+      await fs.writeFile(filePath, Buffer.alloc(fileSize));
+      
+      // Download chunks in parallel (max 3 concurrent downloads)
+      const maxConcurrent = 3;
+      let activeDownloads = 0;
+      let chunkIndex = 0;
+      const chunks = [];
+      
+      // Create chunks array
+      for (let i = 0; i < totalChunks; i++) {
+        const start = i * chunkSize;
+        const end = Math.min(start + chunkSize - 1, fileSize - 1);
+        chunks.push({ start, end, index: i });
+      }
+      
+      const downloadChunk = async (chunk) => {
+        activeDownloads++;
+        try {
+          const rangeHeaders = {
+            ...headers,
+            'Range': `bytes=${chunk.start}-${chunk.end}`
+          };
+          
+          const response = await axios.get(url, {
+            responseType: 'stream',
+            headers: rangeHeaders,
+            timeout: 60000
+          });
+          
+          await new Promise((resolve, reject) => {
+            const writer = fs.createWriteStream(filePath, {
+              start: chunk.start,
+              flags: 'r+'
+            });
+            
+            response.data.pipe(writer);
+            
+            writer.on('finish', () => {
+              console.log(`ParseService.downloadWithRange: Chunk ${chunk.index + 1}/${totalChunks} downloaded successfully`);
+              resolve();
+            });
+            
+            writer.on('error', reject);
+            response.data.on('error', reject);
+          });
+        } finally {
+          activeDownloads--;
+        }
+      };
+      
+      // Download chunks with concurrency control
+      while (chunkIndex < totalChunks || activeDownloads > 0) {
+        if (activeDownloads < maxConcurrent && chunkIndex < totalChunks) {
+          downloadChunk(chunks[chunkIndex]);
+          chunkIndex++;
+        } else {
+          // Wait a bit before checking again
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+      
+      console.log('ParseService.downloadWithRange: All chunks downloaded successfully');
+    } catch (error) {
+      console.error('ParseService.downloadWithRange: Error:', error);
+      throw error;
+    }
+  }
+
   // Download media file and save to both database and project root directory
   static async downloadMedia(parsedData, platform, sourceType = 1, taskId = null) {
     try {
@@ -1015,7 +1150,15 @@ class ParseService {
         console.warn('ParseService.downloadMedia: Failed to parse media URL for Referer:', urlError.message);
       }
       
-      console.log('ParseService.downloadMedia: Using Referer:', referer);
+      // Enhanced headers for download requests
+      const headers = {
+        'User-Agent': this.getRandomUserAgent(),
+        'Referer': referer,
+        'Accept': parsedData.media_type === 'video' ? 'video/*' : 'image/*',
+        'Accept-Encoding': 'identity' // Avoid gzip encoding for range requests
+      };
+      
+      console.log('ParseService.downloadMedia: Using headers:', headers);
       
       // Download retry logic with exponential backoff
       const maxRetries = 3;
@@ -1025,52 +1168,16 @@ class ParseService {
         try {
           console.log(`ParseService.downloadMedia: Attempt ${retry + 1}/${maxRetries} for URL:`, parsedData.media_url);
           
-          // Download the actual file with proper headers and timeout
-          const response = await axios.get(parsedData.media_url, {
-            responseType: 'stream',
-            timeout: 30000, // 30 seconds timeout
-            maxRedirects: 5,
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-              'Referer': referer,
-              'Accept': parsedData.media_type === 'video' ? 'video/*' : 'image/*' // Only accept specific media type
-            }
-          });
+          // Use enhanced download with range support for large files
+          await this.downloadWithRange(parsedData.media_url, fullPath, headers);
           
-          console.log('ParseService.downloadMedia: Download response received with status:', response.status);
-          
-          // Check Content-Type header
-          const contentType = response.headers['content-type'] || '';
-          console.log('ParseService.downloadMedia: Received Content-Type:', contentType);
-          
-          // Verify it's a supported media type
-          if (!this.isSupportedMediaType(contentType)) {
-            console.error('ParseService.downloadMedia: Unsupported media type:', contentType, 'for URL:', parsedData.media_url);
-            throw new Error(`Unsupported media type: ${contentType}`);
+          // Verify file exists and has content
+          const stats = await fs.stat(fullPath);
+          if (stats.size === 0) {
+            throw new Error('Downloaded file is empty');
           }
           
-          // Save the file to project root directory
-          console.log('ParseService.downloadMedia: Saving file to disk...');
-          await new Promise((resolve, reject) => {
-            const writer = fs.createWriteStream(fullPath);
-            
-            response.data.pipe(writer);
-            
-            writer.on('finish', () => {
-              console.log('ParseService.downloadMedia: File saved successfully');
-              resolve();
-            });
-            
-            writer.on('error', (err) => {
-              console.error('ParseService.downloadMedia: Error writing file:', err);
-              reject(err);
-            });
-            
-            response.data.on('error', (err) => {
-              console.error('ParseService.downloadMedia: Error in download stream:', err);
-              reject(err);
-            });
-          });
+          console.log(`ParseService.downloadMedia: File saved successfully, size: ${stats.size} bytes`);
           
           // Enhanced file validation
           console.log('ParseService.downloadMedia: Validating downloaded media file...');
@@ -1097,6 +1204,9 @@ class ParseService {
         } catch (error) {
           lastError = error;
           console.error(`ParseService.downloadMedia: Attempt ${retry + 1} failed:`, error.message);
+          
+          // Clean up partial file
+          await fs.unlink(fullPath).catch(console.error);
           
           // Wait before retry (exponential backoff)
           if (retry < maxRetries - 1) {
