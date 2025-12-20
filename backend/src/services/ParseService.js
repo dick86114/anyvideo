@@ -289,24 +289,40 @@ static async getXiaohongshuHeaders(url, path, params = {}) {
         /window\.__INITIAL_STATE__\s*=\s*(\{[^;]+\});/, 
         /window\.__INITIAL_DATA__\s*=\s*(\{[^;]+\});/, 
         /window\.INITIAL_STATE\s*=\s*(\{[^;]+\});/, 
+        /__INITIAL_STATE__\s*=\s*(\{[^;]+\});/, 
         
         // Note-specific patterns
         /window\.__NOTE_DATA__\s*=\s*(\{[^;]+\});/, 
         /window\.\$NOTE_DATA\s*=\s*(\{[^;]+\});/, 
         /window\.__PAGE_DATA__\s*=\s*(\{[^;]+\});/, 
+        /__NOTE_DATA__\s*=\s*(\{[^;]+\});/, 
         
         // Redux/Store patterns
         /window\.\$REDUX_STATE\s*=\s*(\{[^;]+\});/, 
         /window\.\$STORE\s*=\s*(\{[^;]+\});/, 
+        /window\.store\s*=\s*(\{[^;]+\});/, 
         
         // Alternative patterns
         /window\.__data__\s*=\s*(\{[^;]+\});/, 
         /window\.\$REQUIRED_FIELDS\s*=\s*(\{[^;]+\});/, 
         /window\.data\s*=\s*(\{[^;]+\});/, 
+        /window\.__APP_INITIAL_STATE__\s*=\s*(\{[^;]+\});/, 
+        /window\.appData\s*=\s*(\{[^;]+\});/, 
+        /window\.initialData\s*=\s*(\{[^;]+\});/, 
         
-        // New patterns based on current Xiaohongshu structure
-        /<script[^>]*id="__NEXT_DATA__"[^>]*>\s*window\.__NEXT_DATA__\s*=\s*(\{[^;]+\});\s*<\/script>/, // Next.js data pattern
-        /<script[^>]*>\s*__INITIAL_STATE__\s*=\s*(\{[^;]+\});\s*<\/script>/ // Additional initial state pattern
+        // Next.js patterns
+        /<script[^>]*id="__NEXT_DATA__"[^>]*>\s*(\{[^<]+\})\s*<\/script>/, // Next.js data pattern without window.__NEXT_DATA__ assignment
+        /<script[^>]*id="__NEXT_DATA__"[^>]*>\s*window\.__NEXT_DATA__\s*=\s*(\{[^;]+\});\s*<\/script>/, 
+        
+        // Additional script patterns
+        /<script[^>]*>\s*__INITIAL_STATE__\s*=\s*(\{[^;]+\});\s*<\/script>/, 
+        /<script[^>]*>\s*window\.global_data\s*=\s*(\{[^;]+\});\s*<\/script>/, 
+        /<script[^>]*>\s*window\.FE_APP_DATA\s*=\s*(\{[^;]+\});\s*<\/script>/, 
+        /<script[^>]*>\s*window\.XHS_DATA\s*=\s*(\{[^;]+\});\s*<\/script>/, 
+        /<script[^>]*>\s*window\.noteData\s*=\s*(\{[^;]+\});\s*<\/script>/, 
+        
+        // Alternative JSON extraction patterns
+        /"note"\s*:\s*(\{[^}]+\})/ // Direct note object extraction
       ];
       
       console.log('开始提取JSON数据...');
@@ -347,6 +363,15 @@ static async getXiaohongshuHeaders(url, path, params = {}) {
                            jsonData.props?.pageProps?.note ||
                            jsonData.__NEXT_DATA__?.props?.pageProps?.note ||
                            jsonData.data?.noteDetail ||
+                           jsonData.detail?.note ||
+                           jsonData.fe_data?.note ||
+                           jsonData.data?.detail?.note ||
+                           jsonData.state?.detail?.note ||
+                           jsonData.__data__?.note ||
+                           jsonData.note_data ||
+                           jsonData.data?.contents?.[0]?.content ||
+                           jsonData.data?.content ||
+                           jsonData.content ||
                            {};
         
         console.log('找到的内容数据:', JSON.stringify(contentData, null, 2).substring(0, 300) + '...');
