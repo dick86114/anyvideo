@@ -1,0 +1,656 @@
+const { AppDataSource } = require('../utils/db');
+const ParseService = require('../services/ParseService');
+const fs = require('fs-extra');
+const path = require('path');
+const CacheService = require('../services/CacheService');
+const xlsx = require('xlsx');
+const axios = require('axios');
+const mongoose = require('mongoose'); // Keep for ObjectId handling
+
+class ContentController {
+  // Parse content from link
+  static async parseContent(req, res) {
+    try {
+      const { link } = req.body;
+      
+      if (!link) {
+        return res.status(400).json({ message: '请提供作品链接' });
+      }
+      
+      // Parse link and save to database
+      const content = await ParseService.parseLink(link);
+      
+      res.status(201).json({
+        message: '解析成功',
+        data: content
+      });
+    } catch (error) {
+      console.error('Parse content error:', error);
+      res.status(500).json({ message: error.message || '解析失败' });
+    }
+  }
+
+  // Get content list with pagination and filters
+  static async getContentList(req, res) {
+    try {
+      const {
+        page = 1,
+        page_size = 10,
+        platform,
+        media_type,
+        author,
+        source_type,
+        keyword,
+        start_date,
+        end_date
+      } = req.query;
+      
+      // Create cache key based on query parameters
+      const cacheKey = CacheService.getContentListCacheKey(req.query);
+      
+      // Check cache first
+      const cachedData = CacheService.get(cacheKey);
+      if (cachedData) {
+        return res.status(200).json(cachedData);
+      }
+      
+      // Get Content repository from TypeORM
+      const contentRepository = AppDataSource.getRepository('Content');
+      
+      // Build query with TypeORM QueryBuilder
+      const queryBuilder = contentRepository.createQueryBuilder('content');
+      
+      // Apply filters
+      if (platform) {
+        queryBuilder.andWhere('content.platform = :platform', { platform });
+      }
+      if (media_type) {
+        queryBuilder.andWhere('content.media_type = :media_type', { media_type });
+      }
+      if (author) {
+        queryBuilder.andWhere('content.author ILIKE :author', { author: `%${author}%` });
+      }
+      if (source_type) {
+        queryBuilder.andWhere('content.source_type = :source_type', { source_type: parseInt(source_type) });
+      }
+      if (keyword) {
+        queryBuilder.andWhere('content.title ILIKE :keyword OR content.description ILIKE :keyword', { keyword: `%${keyword}%` });
+      }
+      if (start_date || end_date) {
+        if (start_date) {
+          queryBuilder.andWhere('content.created_at >= :start_date', { start_date: new Date(start_date) });
+        }
+        if (end_date) {
+          queryBuilder.andWhere('content.created_at <= :end_date', { end_date: new Date(end_date) });
+        }
+      }
+      
+      // Get total count
+      const total = await queryBuilder.getCount();
+      
+      // Get paginated data
+      const contents = await queryBuilder
+        .orderBy('content.created_at', 'DESC')
+        .skip((parseInt(page) - 1) * parseInt(page_size))
+        .take(parseInt(page_size))
+        .getMany();
+      
+      // Prepare response data
+      const responseData = {
+        message: '获取成功',
+        data: {
+          list: contents,
+          total,
+          page: parseInt(page),
+          page_size: parseInt(page_size)
+        }
+      };
+      
+      // Cache the response for 1 minute (60 seconds)
+      CacheService.set(cacheKey, responseData, 60);
+      
+      res.status(200).json(responseData);
+    } catch (error) {
+      console.error('Get content list error:', error);
+      res.status(500).json({ message: '获取内容列表失败' });
+    }
+  }
+
+  // Get content by ID
+  static async getContentById(req, res) {
+    try {
+      const { id } = req.params;
+      
+      // Get Content repository from TypeORM
+      const contentRepository = AppDataSource.getRepository('Content');
+      const content = await contentRepository.findOne({ where: { id } });
+      
+      if (!content) {
+        return res.status(404).json({ message: '内容不存在' });
+      }
+      
+      res.status(200).json({
+        message: '获取成功',
+        data: content
+      });
+    } catch (error) {
+      console.error('Get content by id error:', error);
+      res.status(500).json({ message: '获取内容失败' });
+    }
+  }
+
+  // Delete content by ID
+  static async deleteContent(req, res) {
+    try {
+      const { id } = req.params;
+      
+      // Get Content repository from TypeORM
+      const contentRepository = AppDataSource.getRepository('Content');
+      
+      // Find content first to get file path
+      const content = await contentRepository.findOne({ where: { id } });
+      if (!content) {
+        return res.status(404).json({ message: '内容不存在' });
+      }
+      
+      // Delete from database
+      await contentRepository.delete(id);
+      
+      // Delete file from disk
+      const filePath = path.join(process.env.STORAGE_ROOT_PATH, content.file_path);
+      try {
+        await fs.unlink(filePath);
+      } catch (fileError) {
+        console.error('Delete file error:', fileError);
+        // Continue even if file deletion fails
+      }
+      
+      res.status(200).json({ message: '删除成功' });
+    } catch (error) {
+      console.error('Delete content error:', error);
+      res.status(500).json({ message: '删除内容失败' });
+    }
+  }
+
+  // Batch delete contents
+  static async batchDeleteContents(req, res) {
+    try {
+      const { ids } = req.body;
+      
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ message: '请选择要删除的内容' });
+      }
+      
+      // Get Content repository from TypeORM
+      const contentRepository = AppDataSource.getRepository('Content');
+      
+      // Get contents to delete
+      const contents = await contentRepository.findByIds(ids);
+      
+      // Delete from database
+      await contentRepository.delete(ids);
+      
+      // Delete files from disk
+      for (const content of contents) {
+        const filePath = path.join(process.env.STORAGE_ROOT_PATH, content.file_path);
+        try {
+          await fs.unlink(filePath);
+        } catch (fileError) {
+          console.error('Delete file error:', fileError);
+          // Continue even if file deletion fails
+        }
+      }
+      
+      res.status(200).json({ message: '批量删除成功' });
+    } catch (error) {
+      console.error('Batch delete contents error:', error);
+      res.status(500).json({ message: '批量删除失败' });
+    }
+  }
+
+  // Batch export contents
+  static async batchExportContents(req, res) {
+    try {
+      const { ids } = req.body;
+      
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ message: '请选择要导出的内容' });
+      }
+      
+      // Get Content repository from TypeORM
+      const contentRepository = AppDataSource.getRepository('Content');
+      
+      // Get contents to export
+      const contents = await contentRepository.findByIds(ids);
+      
+      // Convert content data to Excel format
+      const exportData = contents.map(content => ({
+        '标题': content.title,
+        '作者': content.author,
+        '平台': content.platform,
+        '类型': content.media_type === 'video' ? '视频' : '图片',
+        '来源': content.source_type === 1 ? '单链接解析' : '监控任务',
+        '采集时间': content.created_at ? new Date(content.created_at).toLocaleString() : '',
+        '原始链接': content.source_url,
+        '文件路径': content.file_path
+      }));
+      
+      // Create workbook and worksheet
+      const ws = xlsx.utils.json_to_sheet(exportData);
+      const wb = xlsx.utils.book_new();
+      xlsx.utils.book_append_sheet(wb, ws, '内容列表');
+      
+      // Generate file name with timestamp
+      const timestamp = new Date().getTime();
+      const fileName = `content_export_${timestamp}.xlsx`;
+      const filePath = path.join(__dirname, '../../tmp', fileName);
+      
+      // Ensure tmp directory exists
+      await fs.ensureDir(path.join(__dirname, '../../tmp'));
+      
+      // Write workbook to file
+      await xlsx.writeFile(wb, filePath);
+      
+      // Generate download URL (for local development, we'll just return the file path)
+      const downloadUrl = `/api/content/download-export?file=${fileName}`;
+      
+      res.status(200).json({
+        message: '导出成功',
+        data: {
+          download_url: downloadUrl,
+          file_name: fileName
+        }
+      });
+    } catch (error) {
+      console.error('Batch export contents error:', error);
+      res.status(500).json({ message: '导出失败' });
+    }
+  }
+
+  // Download exported Excel file
+  static async downloadExport(req, res) {
+    try {
+      const { file } = req.query;
+      
+      if (!file) {
+        return res.status(400).json({ message: '请提供文件名' });
+      }
+      
+      // Prevent directory traversal attack
+      if (file.includes('..') || file.includes('/')) {
+        return res.status(400).json({ message: '无效的文件名' });
+      }
+      
+      const filePath = path.join(__dirname, '../../tmp', file);
+      
+      // Check if file exists
+      if (!await fs.pathExists(filePath)) {
+        return res.status(404).json({ message: '文件不存在' });
+      }
+      
+      // Set headers and send file
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename=${encodeURIComponent(file)}`);
+      res.sendFile(filePath, (err) => {
+        if (err) {
+          console.error('Send file error:', err);
+          res.status(500).json({ message: '文件下载失败' });
+        } else {
+          // Delete file after download (optional)
+          setTimeout(() => {
+            fs.unlink(filePath).catch(console.error);
+          }, 5000);
+        }
+      });
+    } catch (error) {
+      console.error('Download export error:', error);
+      res.status(500).json({ message: '文件下载失败' });
+    }
+  }
+
+  // Download single content file
+  static async downloadContent(req, res) {
+    try {
+      const { id } = req.body;
+      
+      if (!id) {
+        return res.status(400).json({ message: '请提供内容ID' });
+      }
+      
+      // Get Content repository from TypeORM
+      const contentRepository = AppDataSource.getRepository('Content');
+      
+      // Get content from database
+      const content = await contentRepository.findOne({ where: { id } });
+      if (!content) {
+        return res.status(404).json({ message: '内容不存在' });
+      }
+      
+      // Construct file path
+      const filePath = path.join(process.env.STORAGE_ROOT_PATH, content.file_path);
+      
+      // Check if file exists
+      if (!await fs.pathExists(filePath)) {
+        return res.status(404).json({ message: '文件不存在' });
+      }
+      
+      // Determine file extension and set appropriate Content-Type
+      const fileExtension = path.extname(filePath).toLowerCase();
+      let contentType = 'application/octet-stream';
+      
+      if (fileExtension === '.mp4') {
+        contentType = 'video/mp4';
+      } else if (fileExtension === '.jpg' || fileExtension === '.jpeg') {
+        contentType = 'image/jpeg';
+      } else if (fileExtension === '.png') {
+        contentType = 'image/png';
+      } else if (fileExtension === '.gif') {
+        contentType = 'image/gif';
+      }
+      
+      // Extract original filename from content
+      const fileName = `${content.title || 'content'}_${content.platform || 'unknown'}_${content.id}${fileExtension}`;
+      
+      // Set headers and send file
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `attachment; filename=${encodeURIComponent(fileName)}`);
+      res.sendFile(filePath, (err) => {
+        if (err) {
+          console.error('Send file error:', err);
+          res.status(500).json({ message: '文件下载失败' });
+        }
+      });
+    } catch (error) {
+      console.error('Download content error:', error);
+      res.status(500).json({ message: '文件下载失败' });
+    }
+  }
+
+  // Helper function to check if content type is a supported media type
+  static isSupportedMediaType(contentType) {
+    const supportedTypes = {
+      'image': ['jpeg', 'png', 'gif', 'webp', 'jpg'],
+      'video': ['mp4', 'mov', 'avi', 'mkv', 'webm']
+    };
+    
+    if (!contentType) return false;
+    
+    const typeParts = contentType.split('/');
+    if (typeParts.length !== 2) return false;
+    
+    const [mainType, subType] = typeParts;
+    return supportedTypes[mainType] && supportedTypes[mainType].includes(subType);
+  }
+  
+  // Helper function to check if content is HTML
+  static isHTMLContent(contentType, data) {
+    if (contentType && contentType.includes('text/html')) {
+      return true;
+    }
+    
+    // Check if data is a string and contains HTML tags
+    if (typeof data === 'string' && /<html|<!DOCTYPE html/i.test(data)) {
+      return true;
+    }
+    
+    return false;
+  }
+  
+  // Proxy download for external media files (bypass CORS)
+  static async proxyDownload(req, res) {
+    try {
+      const { url, filename } = req.query;
+      
+      if (!url) {
+        console.error('ProxyDownload: No URL provided');
+        return res.status(400).json({ message: '请提供下载URL' });
+      }
+      
+      console.log('ProxyDownload: Starting download for URL:', url);
+      
+      // Validate URL (basic validation to prevent SSRF attacks)
+      const parsedUrl = new URL(url);
+      if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+        console.error('ProxyDownload: Unsupported protocol for URL:', url);
+        return res.status(400).json({ message: '不支持的URL协议' });
+      }
+      
+      // Dynamic Referer header based on the target URL
+      const referer = `${parsedUrl.protocol}//${parsedUrl.host}/`;
+      console.log('ProxyDownload: Using Referer:', referer);
+      
+      // Set a timeout for the request (20 seconds)
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+          console.error('ProxyDownload: Request timed out for URL:', url);
+          reject(new Error('下载超时'));
+        }, 20000);
+      });
+      
+      // Fetch the file from the external URL with follow redirects enabled
+      const axiosResponse = await Promise.race([
+        axios.get(url, {
+          responseType: 'stream',
+          maxRedirects: 5, // Follow up to 5 redirects
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Referer': referer,
+            'Accept': 'image/*,video/*' // Only accept media types
+          }
+        }),
+        timeoutPromise
+      ]);
+      
+      console.log('ProxyDownload: Received response with status:', axiosResponse.status);
+      
+      // Determine content type from response headers
+      const contentType = axiosResponse.headers['content-type'] || 'application/octet-stream';
+      console.log('ProxyDownload: Content-Type:', contentType);
+      
+      // Check if content type is a supported media type
+      if (!this.isSupportedMediaType(contentType)) {
+        console.error('ProxyDownload: Unsupported media type:', contentType, 'for URL:', url);
+        return res.status(400).json({ message: '不支持的媒体类型' });
+      }
+      
+      // Determine file extension if not provided
+      let ext = '';
+      if (contentType.includes('image/jpeg')) ext = '.jpg';
+      else if (contentType.includes('image/png')) ext = '.png';
+      else if (contentType.includes('image/webp')) ext = '.webp';
+      else if (contentType.includes('video/mp4')) ext = '.mp4';
+      else if (contentType.includes('video/mov')) ext = '.mov';
+      
+      // Set filename if not provided
+      const downloadFilename = filename || `download_${Date.now()}${ext}`;
+      
+      // Set response headers for download
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `attachment; filename=${encodeURIComponent(downloadFilename)}`);
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      
+      // Pipe the response stream to the client
+      axiosResponse.data.pipe(res);
+      
+      // Handle stream errors
+      axiosResponse.data.on('error', (err) => {
+        console.error('ProxyDownload: Stream error:', err);
+        if (!res.headersSent) {
+          res.status(500).json({ message: '文件下载失败' });
+        }
+      });
+      
+      // Handle stream end
+      axiosResponse.data.on('end', () => {
+        console.log('ProxyDownload: Download completed successfully for URL:', url);
+      });
+      
+    } catch (error) {
+      console.error('ProxyDownload: Error:', error.stack);
+      if (!res.headersSent) {
+        res.status(500).json({ message: `下载失败: ${error.message}` });
+      }
+    }
+  }
+
+  // Proxy image for frontend display (bypass CORS)
+  static async proxyImage(req, res) {
+    try {
+      const { url } = req.query;
+      
+      if (!url) {
+        console.error('ProxyImage: No URL provided');
+        // Return placeholder SVG if no URL provided
+        const svgPlaceholder = `<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150"><rect width="150" height="150" fill="#f0f0f0"/><text x="75" y="80" font-size="12" text-anchor="middle" fill="#666">缺少图片URL</text></svg>`;
+        res.setHeader('Content-Type', 'image/svg+xml');
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        return res.send(svgPlaceholder);
+      }
+      
+      console.log('ProxyImage: Starting request for URL:', url);
+      
+      // Validate URL (basic validation to prevent SSRF attacks)
+      const parsedUrl = new URL(url);
+      if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+        console.error('ProxyImage: Unsupported protocol for URL:', url);
+        // Return placeholder SVG for invalid protocol
+        const svgPlaceholder = `<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150"><rect width="150" height="150" fill="#f0f0f0"/><text x="75" y="80" font-size="12" text-anchor="middle" fill="#666">不支持的URL协议</text></svg>`;
+        res.setHeader('Content-Type', 'image/svg+xml');
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        return res.send(svgPlaceholder);
+      }
+      
+      // Dynamic Referer header based on the target URL
+      const referer = `${parsedUrl.protocol}//${parsedUrl.host}/`;
+      console.log('ProxyImage: Using Referer:', referer);
+      
+      // Set a timeout for the request (20 seconds)
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+          console.error('ProxyImage: Request timed out for URL:', url);
+          reject(new Error('图片加载超时'));
+        }, 20000);
+      });
+      
+      // Fetch the image from the external URL with follow redirects enabled
+      const axiosResponse = await Promise.race([
+        axios.get(url, { 
+          responseType: 'stream',
+          maxRedirects: 5, // Follow up to 5 redirects
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Referer': referer,
+            'Accept': 'image/*' // Only accept image types
+          }
+        }),
+        timeoutPromise
+      ]);
+      
+      console.log('ProxyImage: Received response with status:', axiosResponse.status);
+      
+      // Determine content type from response headers
+      const contentType = axiosResponse.headers['content-type'] || 'image/jpeg';
+      console.log('ProxyImage: Content-Type:', contentType);
+      
+      // Check if content type is a supported image type
+      if (!this.isSupportedMediaType(contentType) || !contentType.startsWith('image/')) {
+        console.error('ProxyImage: Unsupported image type:', contentType, 'for URL:', url);
+        // Return placeholder SVG for unsupported image type
+        const svgPlaceholder = `<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150"><rect width="150" height="150" fill="#f0f0f0"/><text x="75" y="70" font-size="12" text-anchor="middle" fill="#666">不支持的图片类型</text><text x="75" y="90" font-size="10" text-anchor="middle" fill="#999">${contentType}</text></svg>`;
+        res.setHeader('Content-Type', 'image/svg+xml');
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        return res.send(svgPlaceholder);
+      }
+      
+      // Set response headers for image display
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+      res.setHeader('Access-Control-Allow-Origin', '*'); // Allow CORS for all origins
+      
+      // Pipe the response stream to the client
+      axiosResponse.data.pipe(res);
+      
+      // Handle stream errors
+      axiosResponse.data.on('error', (err) => {
+        console.error('ProxyImage: Stream error:', err);
+        // End response if stream errors
+        res.end();
+      });
+      
+      // Handle stream end
+      axiosResponse.data.on('end', () => {
+        console.log('ProxyImage: Image loaded successfully for URL:', url);
+      });
+      
+    } catch (error) {
+      console.error('ProxyImage: Error:', error.stack);
+      // Return a placeholder SVG if any error occurs
+      const svgPlaceholder = `<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150"><rect width="150" height="150" fill="#f0f0f0"/><text x="75" y="70" font-size="12" text-anchor="middle" fill="#666">图片加载失败</text><text x="75" y="90" font-size="10" text-anchor="middle" fill="#999">${error.message}</text></svg>`;
+      if (!res.headersSent) {
+        res.setHeader('Content-Type', 'image/svg+xml');
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.send(svgPlaceholder);
+      }
+    }
+  }
+
+  // Save content to both database and project root directory
+  static async saveContent(req, res) {
+    try {
+      const { link, source_type = 1, task_id = null } = req.body;
+      
+      if (!link) {
+        return res.status(400).json({ message: '请提供作品链接' });
+      }
+      
+      // Parse the link first
+      const parsedData = await ParseService.parseLink(link);
+      
+      // Detect platform from link
+      const platform = ParseService.detectPlatform(link);
+      if (!platform) {
+        return res.status(400).json({ message: '不支持的平台链接' });
+      }
+      
+      // Download media file and save to both database and project root directory
+      const file_path = await ParseService.downloadMedia(parsedData, platform, source_type, task_id);
+      
+      // Get Content repository from TypeORM
+      const contentRepository = AppDataSource.getRepository('Content');
+      
+      // Prepare content data for database
+      const content = contentRepository.create({
+        platform,
+        content_id: parsedData.content_id,
+        title: parsedData.title,
+        author: parsedData.author,
+        description: parsedData.description || '',
+        media_type: parsedData.media_type,
+        file_path,
+        cover_url: parsedData.cover_url,
+        source_url: link,
+        source_type: parseInt(source_type),
+        task_id,
+        created_at: new Date()
+      });
+      
+      // Save to database
+      await contentRepository.save(content);
+      
+      res.status(201).json({
+        message: '内容保存成功',
+        data: content
+      });
+    } catch (error) {
+      console.error('Save content error:', error);
+      res.status(500).json({ message: `保存失败: ${error.message}` });
+    }
+  }
+}
+
+module.exports = ContentController;
