@@ -108,7 +108,7 @@ function App() {
             </Sider>
             <Layout>
               <Header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
-                <h1 style={{ margin: 0, fontSize: '18px', color: currentTheme === 'dark' ? '#40a9ff' : '#1890ff' }}>内容解析、管理与热点发现系统</h1>
+                <h1 style={{ margin: 0, fontSize: '18px', color: currentTheme === 'dark' ? '#40a9ff' : '#1890ff' }}></h1>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                   <ThemeSwitcher currentTheme={currentTheme} onThemeChange={handleThemeChange} />
                   {currentUser && (
@@ -122,7 +122,7 @@ function App() {
                   </button>
                 </div>
               </Header>
-              <Content style={{ margin: '24px 16px', padding: 24, minHeight: 280 }}>
+              <Content style={{ margin: 0, padding: 16, minHeight: 280 }}>
                 <Routes>
                   {/* Redirect to dashboard if authenticated user tries to access login */}
                   <Route path="/login" element={<Navigate to="/dashboard" replace />} />
