@@ -125,18 +125,28 @@ const ContentManagement = () => {
     try {
       setLoading(true);
       
-      // Build query params
+      // Build query params - only include non-empty values to ensure proper filtering
       const params = {
         page: pagination.current,
-        page_size: pagination.pageSize,
-        keyword: filters.keyword,
-        platform: filters.platform,
-        media_type: filters.media_type,
-        source_type: filters.source_type
+        page_size: pagination.pageSize
       };
       
+      // Only add filter parameters if they have values (not empty strings or null)
+      if (filters.keyword && filters.keyword.trim()) {
+        params.keyword = filters.keyword.trim();
+      }
+      if (filters.platform) {
+        params.platform = filters.platform;
+      }
+      if (filters.media_type) {
+        params.media_type = filters.media_type;
+      }
+      if (filters.source_type) {
+        params.source_type = filters.source_type;
+      }
+      
       // Add date range if selected
-      if (filters.date_range) {
+      if (filters.date_range && filters.date_range.length === 2) {
         params.start_date = filters.date_range[0].format('YYYY-MM-DD');
         params.end_date = filters.date_range[1].format('YYYY-MM-DD');
       }
@@ -150,18 +160,10 @@ const ContentManagement = () => {
       setTotal(contentData.total || 0);
     } catch (error) {
       console.error('Get content list error:', error);
-      // Use mock data as fallback without showing error message to user
-      setContentList(Array.from({ length: pagination.pageSize }, (_, i) => ({
-        id: `mock-${pagination.current}-${i}`,
-        cover_url: 'https://picsum.photos/id/237/200/150',
-        title: `模拟内容标题 ${pagination.current}-${i}`,
-        author: `模拟作者 ${i}`,
-        platform: ['douyin', 'xiaohongshu', 'weibo', 'kuaishou', 'bilibili'][Math.floor(Math.random() * 5)],
-        media_type: Math.random() > 0.5 ? 'video' : 'image',
-        source_type: Math.random() > 0.5 ? 1 : 2,
-        created_at: new Date().toISOString()
-      })));
-      setTotal(100);
+      // Show empty list when API fails instead of mock data
+      setContentList([]);
+      setTotal(0);
+      message.error('获取内容列表失败，请检查后端服务是否正常运行');
     } finally {
       setLoading(false);
     }
@@ -207,11 +209,11 @@ const ContentManagement = () => {
     }));
   };
 
-  // Handle search
+  // Handle search - automatically trigger when filters change
   const handleSearch = () => {
     setPagination(prev => ({
       ...prev,
-      current: 1
+      current: 1 // Reset to first page when searching
     }));
     getContentList();
   };
@@ -229,7 +231,37 @@ const ContentManagement = () => {
       current: 1,
       pageSize: 10
     });
-    getContentList();
+    // Automatically reload content after reset
+    setTimeout(() => {
+      getContentList();
+    }, 0);
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters = () => {
+    return !!(
+      (filters.keyword && filters.keyword.trim()) ||
+      filters.platform ||
+      filters.media_type ||
+      filters.source_type ||
+      filters.date_range
+    );
+  };
+
+  // Get filter status text for user feedback
+  const getFilterStatusText = () => {
+    if (!hasActiveFilters()) {
+      return '显示所有内容';
+    }
+    
+    const activeFilters = [];
+    if (filters.keyword && filters.keyword.trim()) activeFilters.push('关键词');
+    if (filters.platform) activeFilters.push('平台');
+    if (filters.media_type) activeFilters.push('类型');
+    if (filters.source_type) activeFilters.push('来源');
+    if (filters.date_range) activeFilters.push('日期范围');
+    
+    return `已应用筛选条件: ${activeFilters.join(', ')}`;
   };
 
   // Handle pagination change
@@ -287,10 +319,15 @@ const ContentManagement = () => {
     }
   };
 
-  // Load content list on component mount and when filters/pagination change
+  // Load content list on component mount and when pagination changes
   useEffect(() => {
     getContentList();
   }, [pagination]);
+
+  // Load content list on initial mount (show all content by default)
+  useEffect(() => {
+    getContentList();
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
@@ -303,12 +340,14 @@ const ContentManagement = () => {
             value={filters.keyword}
             onChange={(e) => handleFilterChange('keyword', e.target.value)}
             onPressEnter={handleSearch}
+            allowClear
           />
           <Select 
-            placeholder="平台" 
+            placeholder="选择平台" 
             style={{ width: 150 }}
-            value={filters.platform}
+            value={filters.platform || undefined}
             onChange={(value) => handleFilterChange('platform', value)}
+            allowClear
           >
             <Select.Option value="douyin">抖音</Select.Option>
             <Select.Option value="xiaohongshu">小红书</Select.Option>
@@ -317,24 +356,27 @@ const ContentManagement = () => {
             <Select.Option value="weibo">微博</Select.Option>
           </Select>
           <Select 
-            placeholder="类型" 
+            placeholder="选择类型" 
             style={{ width: 120 }}
-            value={filters.media_type}
+            value={filters.media_type || undefined}
             onChange={(value) => handleFilterChange('media_type', value)}
+            allowClear
           >
             <Select.Option value="video">视频</Select.Option>
             <Select.Option value="image">图片</Select.Option>
           </Select>
           <Select 
-            placeholder="来源" 
+            placeholder="选择来源" 
             style={{ width: 150 }}
-            value={filters.source_type}
+            value={filters.source_type || undefined}
             onChange={(value) => handleFilterChange('source_type', value)}
+            allowClear
           >
             <Select.Option value="1">单链接解析</Select.Option>
             <Select.Option value="2">监控任务</Select.Option>
           </Select>
           <RangePicker 
+            placeholder={['开始日期', '结束日期']}
             style={{ width: 300 }}
             value={filters.date_range}
             onChange={(date) => handleFilterChange('date_range', date)}
@@ -342,6 +384,26 @@ const ContentManagement = () => {
           <Button type="primary" onClick={handleSearch}>筛选</Button>
           <Button onClick={handleReset}>重置</Button>
         </Space>
+        
+        {/* Filter status indicator */}
+        <div style={{ 
+          marginTop: '12px', 
+          padding: '8px 12px', 
+          backgroundColor: hasActiveFilters() ? '#e6f7ff' : '#f6ffed',
+          border: `1px solid ${hasActiveFilters() ? '#91d5ff' : '#b7eb8f'}`,
+          borderRadius: '6px',
+          fontSize: '14px',
+          color: hasActiveFilters() ? '#1890ff' : '#52c41a'
+        }}>
+          <span style={{ fontWeight: '500' }}>
+            {getFilterStatusText()}
+          </span>
+          {total > 0 && (
+            <span style={{ marginLeft: '8px', color: '#666' }}>
+              (共 {total} 条记录)
+            </span>
+          )}
+        </div>
       </Card>
       
       <Card>
@@ -375,10 +437,17 @@ const ContentManagement = () => {
               total,
               onChange: handlePaginationChange,
               showSizeChanger: true,
-              pageSizeOptions: ['10', '20', '50', '100']
+              pageSizeOptions: ['10', '20', '50', '100'],
+              showTotal: (total, range) => 
+                `显示第 ${range[0]}-${range[1]} 条记录，共 ${total} 条`,
             }}
             rowSelection={rowSelection}
             loading={loading}
+            locale={{
+              emptyText: hasActiveFilters() 
+                ? '没有找到符合筛选条件的内容' 
+                : '暂无内容数据，请先添加一些内容'
+            }}
           />
         </Space>
       </Card>

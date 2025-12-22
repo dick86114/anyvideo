@@ -49,8 +49,11 @@ const generateCacheKey = (config) => {
 // Response interceptor - handle errors and caching
 api.interceptors.response.use(
   (response) => {
-    // Cache successful responses for GET requests
-    if (response.config.method === 'get') {
+    // Skip caching for content list API to ensure real-time data
+    const isContentListAPI = response.config.url && response.config.url.includes('/content') && response.config.method === 'get';
+    
+    // Cache successful responses for GET requests (except content list)
+    if (response.config.method === 'get' && !isContentListAPI) {
       const cacheKey = generateCacheKey(response.config);
       const cacheItem = {
         data: response.data,
@@ -102,11 +105,14 @@ api.interceptors.response.use(
   }
 );
 
-// Request interceptor - check cache first for GET requests
+// Request interceptor - check cache first for GET requests (but skip content list)
 api.interceptors.request.use(
   (config) => {
-    // Check cache for GET requests
-    if (config.method === 'get') {
+    // Skip caching for content list API to ensure real-time data
+    const isContentListAPI = config.url && config.url.includes('/content') && config.method === 'get';
+    
+    // Check cache for GET requests (except content list)
+    if (config.method === 'get' && !isContentListAPI) {
       const cacheKey = generateCacheKey(config);
       const cachedItem = responseCache.get(cacheKey);
       
