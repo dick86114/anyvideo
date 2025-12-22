@@ -364,6 +364,10 @@ const ContentParsing = () => {
         media_type: result.media_type || result.data?.media_type || 'image',
         media_url: result.media_url || result.data?.media_url || 'https://via.placeholder.com/800x600',
         all_images: result.all_images || result.data?.all_images || [],
+        has_live_photo: result.has_live_photo || result.data?.has_live_photo || false,
+        live_photos: result.live_photos || result.data?.live_photos || [],
+        content_id: result.content_id || result.data?.content_id || null,
+        source_url: link,
         file_size: '未知' // Will be calculated from actual file
       };
       
@@ -506,9 +510,12 @@ const ContentParsing = () => {
                   <h4>标题：{parsedResult.title}</h4>
                   <p>作者：{parsedResult.author}</p>
                   <p>平台：{parsedResult.platform}</p>
-                  <p>类型：{parsedResult.media_type === 'video' ? '视频' : '图片'}</p>
+                  <p>类型：{parsedResult.media_type === 'video' ? '视频' : parsedResult.media_type === 'live_photo' ? '实况图片' : '图片'}</p>
                   {parsedResult.all_images && parsedResult.all_images.length > 0 && (
                     <p>图片数量：{parsedResult.all_images.length} 张</p>
+                  )}
+                  {parsedResult.has_live_photo && (
+                    <p style={{ color: '#1890ff', fontWeight: 'bold' }}>🎬 包含实况图片</p>
                   )}
                   <Space size="middle" style={{ marginTop: 16 }}>
                     <Button 
@@ -543,10 +550,17 @@ const ContentParsing = () => {
                 </div>
               )}
               
-              {/* Preview all images if available and media type is image */}
-              {parsedResult.media_type === 'image' && parsedResult.all_images && parsedResult.all_images.length > 0 && (
+              {/* Preview all images if available and media type is image or live_photo */}
+              {(parsedResult.media_type === 'image' || parsedResult.media_type === 'live_photo') && parsedResult.all_images && parsedResult.all_images.length > 0 && (
                 <div style={{ marginTop: 20, width: '100%' }}>
-                  <h4>图片预览</h4>
+                  <h4>
+                    图片预览
+                    {parsedResult.has_live_photo && (
+                      <span style={{ color: '#1890ff', marginLeft: 8, fontSize: 14 }}>
+                        🎬 包含实况图片
+                      </span>
+                    )}
+                  </h4>
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', overflowX: 'auto', padding: 10, backgroundColor: '#f5f5f5', borderRadius: 8 }}>
                     {parsedResult.all_images.slice(0, 5).map((imgUrl, index) => (
                       <div key={index} style={{ flex: '0 0 auto' }}>

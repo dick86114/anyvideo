@@ -1,0 +1,2 @@
+[console_scripts]
+media-parser = media_parser_sdk.cli:main

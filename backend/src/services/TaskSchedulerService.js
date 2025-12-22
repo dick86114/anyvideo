@@ -131,8 +131,23 @@ class TaskSchedulerService {
       // Determine cron expression based on frequency
       let cronExpression;
       switch (task.frequency) {
+        case '10min':
+          cronExpression = '*/10 * * * *'; // Every 10 minutes
+          break;
+        case '30min':
+          cronExpression = '*/30 * * * *'; // Every 30 minutes
+          break;
         case 'hourly':
           cronExpression = '0 * * * *'; // Run every hour
+          break;
+        case '2hours':
+          cronExpression = '0 */2 * * *'; // Every 2 hours
+          break;
+        case '6hours':
+          cronExpression = '0 */6 * * *'; // Every 6 hours
+          break;
+        case '12hours':
+          cronExpression = '0 */12 * * *'; // Every 12 hours
           break;
         case 'daily':
           cronExpression = '0 0 * * *'; // Run every day at midnight
@@ -336,8 +351,23 @@ class TaskSchedulerService {
     const nextRunTime = new Date(now);
     
     switch (task.frequency) {
+      case '10min':
+        nextRunTime.setMinutes(nextRunTime.getMinutes() + 10);
+        break;
+      case '30min':
+        nextRunTime.setMinutes(nextRunTime.getMinutes() + 30);
+        break;
       case 'hourly':
         nextRunTime.setHours(nextRunTime.getHours() + 1);
+        break;
+      case '2hours':
+        nextRunTime.setHours(nextRunTime.getHours() + 2);
+        break;
+      case '6hours':
+        nextRunTime.setHours(nextRunTime.getHours() + 6);
+        break;
+      case '12hours':
+        nextRunTime.setHours(nextRunTime.getHours() + 12);
         break;
       case 'daily':
         nextRunTime.setDate(nextRunTime.getDate() + 1);

@@ -168,11 +168,20 @@ class AuthorCrawlerService {
     try {
       logger.info(`Starting Xiaohongshu author works crawl for: ${authorId}`);
       
+      // If authorId is a URL, extract the actual author ID
+      let actualAuthorId = authorId;
+      if (authorId.includes('xiaohongshu.com')) {
+        const match = authorId.match(/user\/profile\/([a-zA-Z0-9]+)/);
+        if (match) {
+          actualAuthorId = match[1];
+        }
+      }
+      
       // Setup browser with cookies if provided
       const { browser, page } = await this.setupBrowser('xiaohongshu', config);
       
       // Navigate to author page
-      const authorUrl = `https://www.xiaohongshu.com/user/profile/${authorId}`;
+      const authorUrl = `https://www.xiaohongshu.com/user/profile/${actualAuthorId}`;
       await page.goto(authorUrl, { waitUntil: 'networkidle2', timeout: 30000 });
       
       // Wait for notes to load
@@ -202,88 +211,66 @@ class AuthorCrawlerService {
         await scrollToBottom();
       });
       
-      // Extract note data
-      const works = await page.evaluate(() => {
-        const notes = [];
+      // Extract note URLs first
+      const noteUrls = await page.evaluate(() => {
+        const urls = [];
+        const noteElements = document.querySelectorAll('a[href*="/explore/"]');
         
-        // Get all note elements
-        const noteElements = document.querySelectorAll('div[class*="note-item"]:not([style*="display: none"])');
-        
-        noteElements.forEach((noteEl) => {
-          try {
-            // Extract note info
-            const titleEl = noteEl.querySelector('div[class*="title"]');
-            const coverEl = noteEl.querySelector('img[class*="cover"]');
-            const statsEl = noteEl.querySelector('div[class*="stats"]');
-            const linkEl = noteEl.closest('a');
-            
-            if (!titleEl || !coverEl || !linkEl) return;
-            
-            // Extract basic info
-            const title = titleEl.textContent.trim();
-            const coverUrl = coverEl.src;
-            const noteUrl = linkEl.href;
-            
-            // Extract stats
-            const stats = {};
-            if (statsEl) {
-              const statElements = statsEl.querySelectorAll('span[class*="stat"]');
-              statElements.forEach((statEl, index) => {
-                const text = statEl.textContent.trim();
-                const number = parseInt(text.replace(/[\D]/g, '')) || 0;
-                
-                switch (index) {
-                  case 0: // Views
-                    stats.view_count = number;
-                    break;
-                  case 1: // Likes
-                    stats.like_count = number;
-                    break;
-                  case 2: // Comments
-                    stats.comment_count = number;
-                    break;
-                  case 3: // Collects
-                    stats.collect_count = number;
-                    break;
-                }
-              });
-            }
-            
-            // Extract note ID from URL
-            const noteId = noteUrl.split('/').pop().split('?')[0];
-            
-            notes.push({
-              content_id: `xiaohongshu_${noteId}`,
-              title: title,
-              author: authorId,
-              description: title, // Use title as description for now
-              media_type: coverUrl.includes('.gif') ? 'image' : 'video', // Simplified media type detection
-              cover_url: coverUrl,
-              media_url: noteUrl, // Real implementation would extract actual media file URL
-              source_url: noteUrl,
-              created_at: new Date(), // Xiaohongshu doesn't show exact time in list view
-              platform: 'xiaohongshu',
-              view_count: stats.view_count || 0,
-              like_count: stats.like_count || 0,
-              comment_count: stats.comment_count || 0,
-              collect_count: stats.collect_count || 0
-            });
-          } catch (error) {
-            console.error('Error extracting Xiaohongshu note data:', error);
+        noteElements.forEach((linkEl) => {
+          const href = linkEl.href;
+          if (href && href.includes('/explore/') && !urls.includes(href)) {
+            urls.push(href);
           }
         });
         
-        return notes;
+        return urls.slice(0, 10); // Limit to 10 most recent notes
       });
       
       await browser.close();
       
-      logger.info(`Successfully crawled ${works.length} notes for Xiaohongshu author: ${authorId}`);
+      logger.info(`Found ${noteUrls.length} note URLs for Xiaohongshu author: ${actualAuthorId}`);
+      
+      // Use our enhanced SDK to parse each note
+      const works = [];
+      const ParseService = require('./ParseService');
+      
+      for (const noteUrl of noteUrls) {
+        try {
+          logger.info(`Parsing note: ${noteUrl}`);
+          const parsedData = await ParseService.parseLink(noteUrl);
+          
+          if (parsedData && parsedData.title) {
+            works.push({
+              content_id: parsedData.content_id || `xiaohongshu_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`,
+              title: parsedData.title,
+              author: parsedData.author || actualAuthorId,
+              description: parsedData.description || '',
+              media_type: parsedData.media_type || 'image',
+              cover_url: parsedData.cover_url || '',
+              media_url: parsedData.media_url || '',
+              all_images: parsedData.all_images || [],
+              source_url: noteUrl,
+              created_at: new Date(), // Use current time as we don't have exact publish time
+              platform: 'xiaohongshu',
+              has_live_photo: parsedData.has_live_photo || false,
+              tags: parsedData.tags || [],
+              view_count: 0, // Not available in list view
+              like_count: 0, // Not available in list view
+              comment_count: 0 // Not available in list view
+            });
+          }
+        } catch (parseError) {
+          logger.warn(`Failed to parse note ${noteUrl}:`, parseError.message);
+          // Continue with other notes
+        }
+      }
+      
+      logger.info(`Successfully parsed ${works.length} notes for Xiaohongshu author: ${actualAuthorId}`);
       
       // If no works found, return mock data as fallback
       if (works.length === 0) {
-        logger.warn(`No notes found for Xiaohongshu author: ${authorId}, returning mock data`);
-        return this.generateMockWorks('xiaohongshu', authorId, 3);
+        logger.warn(`No notes found for Xiaohongshu author: ${actualAuthorId}, returning mock data`);
+        return this.generateMockWorks('xiaohongshu', actualAuthorId, 3);
       }
       
       return works;

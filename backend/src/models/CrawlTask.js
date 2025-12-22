@@ -18,14 +18,14 @@ const crawlTaskSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true,
-    maxlength: 200
+    maxlength: 500
   },
   frequency: {
     type: String,
     required: true,
     trim: true,
     maxlength: 20,
-    enum: ['hourly', 'daily', 'weekly']
+    enum: ['10min', '30min', 'hourly', '2hours', '6hours', '12hours', 'daily', 'weekly']
   },
   status: {
     type: Number,
