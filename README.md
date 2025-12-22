@@ -103,15 +103,22 @@ npm install
    JWT_SECRET=your_jwt_secret_key
    JWT_EXPIRES_IN=7d
    
+   # 加密配置
+   ENCRYPTION_KEY=your_encryption_key_here
+   
    # 存储配置
-   STORAGE_PATH=./media
-   TEMP_PATH=./tmp
+   STORAGE_TYPE=local
+   STORAGE_ROOT_PATH=./media
+   
+   # 备份配置
+   BACKUP_DIR=./backups
+   BACKUP_RETENTION_DAYS=7
    
    # 日志配置
    LOG_LEVEL=info
-   LOG_DIR=./logs
    
    # 安全配置
+   PASSWORD_SALT_ROUNDS=10
    RATE_LIMIT_WINDOW_MS=900000
    RATE_LIMIT_MAX=100
    ```
