@@ -1,57 +1,128 @@
 const crypto = require('crypto');
 
-// Use environment variable for encryption key, or generate a default one
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex');
-const IV_LENGTH = 16; // For AES, this is always 16 bytes
-
 class EncryptionService {
+  constructor() {
+    // Use environment variable or default key
+    this.secretKey = process.env.ENCRYPTION_KEY || 'default-secret-key-change-in-production';
+    this.algorithm = 'aes-256-cbc';
+  }
+
   /**
-   * Encrypts a string using AES-256-CBC encryption
+   * Encrypt text
    * @param {string} text - Text to encrypt
-   * @returns {string} - Encrypted text in format "iv:encryptedData"
+   * @returns {string} Encrypted text with IV prepended
    */
-  static encrypt(text) {
-    if (typeof text !== 'string') {
-      throw new Error('Encryption input must be a string');
+  encrypt(text) {
+    try {
+      // Generate a random initialization vector
+      const iv = crypto.randomBytes(16);
+      
+      // Create a key from the secret key
+      const key = crypto.scryptSync(this.secretKey, 'salt', 32);
+      
+      // Create cipher
+      const cipher = crypto.createCipheriv(this.algorithm, key, iv);
+      
+      // Encrypt the text
+      let encrypted = cipher.update(text, 'utf8', 'hex');
+      encrypted += cipher.final('hex');
+      
+      // Prepend IV to encrypted text
+      return iv.toString('hex') + ':' + encrypted;
+    } catch (error) {
+      console.error('Encryption error:', error);
+      throw new Error('加密失败');
     }
-
-    const iv = crypto.randomBytes(IV_LENGTH);
-    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY, 'hex'), iv);
-    let encrypted = cipher.update(text);
-    encrypted = Buffer.concat([encrypted, cipher.final()]);
-    return `${iv.toString('hex')}:${encrypted.toString('hex')}`;
   }
 
   /**
-   * Decrypts a string using AES-256-CBC decryption
-   * @param {string} encryptedText - Encrypted text in format "iv:encryptedData"
-   * @returns {string} - Decrypted text
+   * Decrypt text
+   * @param {string} encryptedText - Encrypted text with IV prepended
+   * @returns {string} Decrypted text
    */
-  static decrypt(encryptedText) {
-    if (typeof encryptedText !== 'string') {
-      throw new Error('Decryption input must be a string');
+  decrypt(encryptedText) {
+    try {
+      // Split IV and encrypted text
+      const parts = encryptedText.split(':');
+      if (parts.length !== 2) {
+        throw new Error('Invalid encrypted text format');
+      }
+      
+      const iv = Buffer.from(parts[0], 'hex');
+      const encrypted = parts[1];
+      
+      // Create a key from the secret key
+      const key = crypto.scryptSync(this.secretKey, 'salt', 32);
+      
+      // Create decipher
+      const decipher = crypto.createDecipheriv(this.algorithm, key, iv);
+      
+      // Decrypt the text
+      let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+      decrypted += decipher.final('utf8');
+      
+      return decrypted;
+    } catch (error) {
+      console.error('Decryption error:', error);
+      throw new Error('解密失败');
     }
-
-    const textParts = encryptedText.split(':');
-    if (textParts.length !== 2) {
-      throw new Error('Invalid encrypted format');
-    }
-
-    const iv = Buffer.from(textParts[0], 'hex');
-    const encryptedData = Buffer.from(textParts[1], 'hex');
-    const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY, 'hex'), iv);
-    let decrypted = decipher.update(encryptedData);
-    decrypted = Buffer.concat([decrypted, decipher.final()]);
-    return decrypted.toString();
   }
 
   /**
-   * Generates a secure random key for encryption
-   * @returns {string} - 64-character hex string (32 bytes)
+   * Generate a secure random key
+   * @param {number} length - Key length in bytes
+   * @returns {string} Random key in hex format
    */
-  static generateKey() {
-    return crypto.randomBytes(32).toString('hex');
+  static generateKey(length = 32) {
+    return crypto.randomBytes(length).toString('hex');
+  }
+
+  /**
+   * Hash password using bcrypt-like approach with crypto
+   * @param {string} password - Password to hash
+   * @param {number} rounds - Number of rounds (default: 10)
+   * @returns {string} Hashed password
+   */
+  static hashPassword(password, rounds = 10) {
+    const salt = crypto.randomBytes(16).toString('hex');
+    let hash = password + salt;
+    
+    for (let i = 0; i < rounds; i++) {
+      hash = crypto.createHash('sha256').update(hash).digest('hex');
+    }
+    
+    return `${rounds}:${salt}:${hash}`;
+  }
+
+  /**
+   * Verify password against hash
+   * @param {string} password - Password to verify
+   * @param {string} hash - Hash to verify against
+   * @returns {boolean} True if password matches
+   */
+  static verifyPassword(password, hash) {
+    try {
+      const parts = hash.split(':');
+      if (parts.length !== 3) {
+        return false;
+      }
+      
+      const rounds = parseInt(parts[0]);
+      const salt = parts[1];
+      const originalHash = parts[2];
+      
+      let testHash = password + salt;
+      for (let i = 0; i < rounds; i++) {
+        testHash = crypto.createHash('sha256').update(testHash).digest('hex');
+      }
+      
+      return testHash === originalHash;
+    } catch (error) {
+      console.error('Password verification error:', error);
+      return false;
+    }
   }
 }
 
-module.exports = EncryptionService;
+// Export singleton instance
+module.exports = new EncryptionService();

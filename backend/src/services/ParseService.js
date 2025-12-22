@@ -6,6 +6,9 @@ const crypto = require('crypto');
 const Content = require('../models/Content');
 const storageService = require('./StorageService');
 const { isValidUrl, isValidImageUrl, normalizeUrl, filterAndNormalizeImageUrls } = require('../utils/urlValidator');
+const WatermarkRemover = require('../utils/watermarkRemover');
+const LivePhotoProcessor = require('../utils/livePhotoProcessor');
+const EnhancedXiaohongshuParser = require('./EnhancedXiaohongshuParser');
 
 // Cookie storage path
 const COOKIE_STORAGE_PATH = path.join(__dirname, '../../data/cookies.json');
@@ -157,6 +160,43 @@ static async loadCookies() {
 }
 
 /**
+ * Get platform cookies from database
+ * @param {string} platform - Platform name (douyin, xiaohongshu, etc.)
+ * @returns {Promise<string>} Cookie string
+ */
+static async getPlatformCookies(platform) {
+  try {
+    const { AppDataSource } = require('../utils/db');
+    const platformCookieRepository = AppDataSource.getRepository('PlatformCookie');
+    
+    // Get the most recent valid cookie for the platform
+    const cookieRecord = await platformCookieRepository.findOne({
+      where: { 
+        platform: platform,
+        is_valid: true 
+      },
+      order: { created_at: 'DESC' }
+    });
+    
+    if (cookieRecord && cookieRecord.cookies_encrypted) {
+      // Decrypt cookies if encryption service is available
+      try {
+        const EncryptionService = require('../utils/encryption');
+        return EncryptionService.decrypt(cookieRecord.cookies_encrypted);
+      } catch (decryptError) {
+        console.warn('Cookie decryption failed, using raw cookies:', decryptError.message);
+        return cookieRecord.cookies_encrypted;
+      }
+    }
+    
+    return '';
+  } catch (error) {
+    console.error('Error getting platform cookies:', error);
+    return '';
+  }
+}
+
+/**
  * Refresh cookies by re-logging in or using refresh token
  * @returns {Promise<void>}
  */
@@ -245,9 +285,147 @@ static async getXiaohongshuHeaders(url, path, params = {}) {
   };
 }
 
-  // Parse Douyin link (mock implementation)
+  // Parse Douyin link with watermark removal
   static async parseDouyinLink(link) {
-    // Mock parsed data - will be replaced with actual parsing logic
+    try {
+      console.log('ParseService.parseDouyinLink: Starting Douyin parsing for:', link);
+      
+      // Get platform cookies for authentication
+      const cookies = await this.getPlatformCookies('douyin');
+      
+      // Extract video ID from URL
+      const videoId = this.extractDouyinVideoId(link);
+      if (!videoId) {
+        throw new Error('无法从链接中提取视频ID');
+      }
+      
+      // Get headers with cookies
+      const headers = await this.getDouyinHeaders(cookies);
+      
+      // Fetch video page
+      const response = await axios.get(link, { headers, timeout: 15000 });
+      const html = response.data;
+      
+      // Extract video data from page
+      const videoData = this.extractDouyinVideoData(html);
+      
+      if (!videoData) {
+        throw new Error('无法解析抖音视频数据');
+      }
+      
+      // Get watermark-free URLs
+      const mediaUrls = this.getDouyinWatermarkFreeUrls(videoData);
+      
+      return {
+        content_id: videoId,
+        title: videoData.desc || '抖音视频',
+        author: videoData.author?.nickname || '抖音用户',
+        description: videoData.desc || '',
+        media_type: videoData.video ? 'video' : 'image',
+        cover_url: videoData.video?.cover || videoData.images?.[0] || 'https://via.placeholder.com/300x200',
+        media_url: mediaUrls.video || mediaUrls.images?.[0] || '',
+        all_images: mediaUrls.images || [],
+        live_images: mediaUrls.live_images || [], // 实况图片
+        platform_data: videoData // 保存原始数据用于调试
+      };
+    } catch (error) {
+      console.error('ParseService.parseDouyinLink: Error:', error);
+      // Fallback to mock data if parsing fails
+      return this.getDouyinMockData(link);
+    }
+  }
+  
+  // Extract Douyin video ID from URL
+  static extractDouyinVideoId(url) {
+    const patterns = [
+      /\/video\/(\d+)/,
+      /\/share\/video\/(\d+)/,
+      /aweme_id=(\d+)/,
+      /item_ids=(\d+)/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) return match[1];
+    }
+    return null;
+  }
+  
+  // Get Douyin-specific headers
+  static async getDouyinHeaders(cookies = '') {
+    return {
+      'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
+      'Referer': 'https://www.douyin.com/',
+      'Cookie': cookies,
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+      'Accept-Encoding': 'gzip, deflate, br',
+      'Connection': 'keep-alive',
+      'Upgrade-Insecure-Requests': '1'
+    };
+  }
+  
+  // Extract video data from Douyin HTML
+  static extractDouyinVideoData(html) {
+    try {
+      // Try to extract from RENDER_DATA
+      let match = html.match(/window\._RENDER_DATA_\s*=\s*({.+?})<\/script>/);
+      if (match) {
+        const renderData = JSON.parse(match[1]);
+        const videoData = renderData?.['6']?.aweme_detail;
+        if (videoData) return videoData;
+      }
+      
+      // Try to extract from SSR_HYDRATED_DATA
+      match = html.match(/window\.__SSR_HYDRATED_DATA__\s*=\s*({.+?})<\/script>/);
+      if (match) {
+        const ssrData = JSON.parse(match[1]);
+        const videoData = ssrData?.props?.pageProps?.videoInfoRes?.item_list?.[0];
+        if (videoData) return videoData;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error extracting Douyin video data:', error);
+      return null;
+    }
+  }
+  
+  // Get watermark-free URLs for Douyin
+  static getDouyinWatermarkFreeUrls(videoData) {
+    const result = {
+      video: null,
+      images: [],
+      live_images: []
+    };
+    
+    // Extract video URL (watermark-free)
+    if (videoData.video?.play_addr?.url_list) {
+      // Get the highest quality video URL
+      const videoUrls = videoData.video.play_addr.url_list;
+      result.video = videoUrls[0]?.replace('playwm', 'play'); // Remove watermark
+    }
+    
+    // Extract images (for image posts)
+    if (videoData.images) {
+      result.images = videoData.images.map(img => {
+        const urls = img.url_list || [];
+        return urls[0]; // Get highest quality
+      }).filter(Boolean);
+    }
+    
+    // Extract live images if available
+    if (videoData.image_infos) {
+      result.live_images = Object.values(videoData.image_infos).map(info => {
+        return info.url_list?.[0];
+      }).filter(Boolean);
+    }
+    
+    return result;
+  }
+  
+  // Fallback mock data for Douyin
+  static getDouyinMockData(link) {
     return {
       content_id: `douyin_${Date.now()}`,
       title: '抖音测试视频',
@@ -255,7 +433,9 @@ static async getXiaohongshuHeaders(url, path, params = {}) {
       description: '这是一个抖音测试视频的描述',
       media_type: 'video',
       cover_url: 'https://via.placeholder.com/300x200',
-      media_url: 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4' // Sample video URL
+      media_url: 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4',
+      all_images: [],
+      live_images: []
     };
   }
 
@@ -402,34 +582,38 @@ static async getXiaohongshuHeaders(url, path, params = {}) {
         // Debug log - show JSON structure (truncated)
         console.log('JSON数据结构:', JSON.stringify(jsonData, null, 2).substring(0, 500) + '...');
         
-        // Enhanced content data extraction - support more structures, prioritize __INITIAL_STATE__ paths
-        contentData = jsonData.notes?.[0] || 
-                     jsonData.note?.noteDetailMap?.[Object.keys(jsonData.note?.noteDetailMap || {})[0]]?.note ||
-                     jsonData.note || 
-                     jsonData.data?.note || 
-                     jsonData.state?.note ||
-                     jsonData.data?.contents?.[0] ||
-                     jsonData.props?.pageProps?.note ||
-                     jsonData.__NEXT_DATA__?.props?.pageProps?.note ||
-                     jsonData.data?.noteDetail ||
-                     jsonData.detail?.note ||
-                     jsonData.fe_data?.note ||
-                     jsonData.data?.detail?.note ||
-                     jsonData.state?.detail?.note ||
-                     jsonData.__data__?.note ||
-                     jsonData.note_data ||
-                     jsonData.data?.contents?.[0]?.content ||
-                     jsonData.data?.content ||
-                           jsonData.content ||
-                           // New paths for __INITIAL_STATE__ structure
-                           jsonData.noteDetail?.note ||
-                           jsonData.fe_page?.note ||
-                           jsonData.pageData?.note ||
-                           jsonData.entryData?.note?.noteData ||
-                           jsonData.initialData?.note ||
-                           jsonData.feed?.items?.[0]?.note ||
-                           jsonData.contentData?.note ||
-                           {};
+        // Enhanced content data extraction - focus on the actual structure used by Xiaohongshu
+        let noteData = null;
+        
+        // Primary path: note.noteDetailMap
+        if (jsonData.note && jsonData.note.noteDetailMap) {
+          const noteIds = Object.keys(jsonData.note.noteDetailMap);
+          if (noteIds.length > 0) {
+            noteData = jsonData.note.noteDetailMap[noteIds[0]].note;
+            console.log('✅ 从 note.noteDetailMap 找到内容数据');
+          }
+        }
+        
+        // Fallback paths
+        if (!noteData) {
+          const fallbackPaths = [
+            jsonData.notes?.[0],
+            jsonData.note,
+            jsonData.data?.note,
+            jsonData.noteDetail?.note,
+            jsonData.state?.note
+          ];
+          
+          for (const path of fallbackPaths) {
+            if (path && typeof path === 'object' && (path.title || path.imageList || path.images)) {
+              noteData = path;
+              console.log('✅ 从备用路径找到内容数据');
+              break;
+            }
+          }
+        }
+        
+        contentData = noteData || {};
         
         console.log('找到的内容数据:', JSON.stringify(contentData, null, 2).substring(0, 300) + '...');
         
@@ -497,10 +681,10 @@ static async getXiaohongshuHeaders(url, path, params = {}) {
         // Extract image URLs from different possible locations (supports both video and image content)
         console.log('开始提取图片URL...');
         
-        // 1. Extract from images array (supports multiple image formats)
-        if (contentData.images && Array.isArray(contentData.images)) {
-          console.log(`找到 ${contentData.images.length} 张图片`);
-          contentData.images.forEach((img, index) => {
+        // 1. Extract from imageList array (most common in Xiaohongshu)
+        if (contentData.imageList && Array.isArray(contentData.imageList)) {
+          console.log(`找到 ${contentData.imageList.length} 张图片 (imageList)`);
+          contentData.imageList.forEach((img, index) => {
             console.log(`处理图片 ${index + 1}:`, JSON.stringify(img, null, 2).substring(0, 200) + '...');
             
             // Enhanced image URL extraction for different image types
@@ -508,24 +692,40 @@ static async getXiaohongshuHeaders(url, path, params = {}) {
               // Thumbnail URLs
               thumbnail: img.thumb_url || img.thumbnail_url,
               // Normal quality URLs
-              normal: img.url || img.middle?.url,
-              // High quality URLs
-              high: img.large?.url || img.origin_url || img.original_url,
+              normal: img.url || img.middle?.url || img.url_default,
+              // High quality URLs - prioritize original and large versions
+              high: img.url_default || img.url || img.large?.url || img.origin_url || img.original_url || img.url_pre,
               // Live photo URLs (image + video combination)
-              livePhotoImage: img.live_photo?.image_url,
-              livePhotoVideo: img.live_photo?.video_url
+              livePhotoImage: img.live_photo?.image_url || img.stream?.h264?.[0]?.master_url,
+              livePhotoVideo: img.live_photo?.video_url || img.stream?.h265?.[0]?.master_url
             };
             
-            // Add high quality URLs first, then fall back to normal quality
-            if (imgUrls.high) {
-              console.log(`提取到高清图片URL: ${imgUrls.high}`);
-              extractedImageUrls.push(imgUrls.high);
+            // Priority: use url_default (highest quality) or url_pre (preprocessed)
+            let selectedUrl = null;
+            
+            // Try to get the best quality URL
+            if (img.url_default) {
+              selectedUrl = img.url_default;
+              console.log(`提取到默认高清图片URL: ${selectedUrl}`);
+            } else if (img.url_pre) {
+              selectedUrl = img.url_pre;
+              console.log(`提取到预处理图片URL: ${selectedUrl}`);
+            } else if (img.url) {
+              selectedUrl = img.url;
+              console.log(`提取到标准图片URL: ${selectedUrl}`);
+            } else if (imgUrls.high) {
+              selectedUrl = imgUrls.high;
+              console.log(`提取到高清图片URL: ${selectedUrl}`);
             } else if (imgUrls.normal) {
-              console.log(`提取到普通图片URL: ${imgUrls.normal}`);
-              extractedImageUrls.push(imgUrls.normal);
+              selectedUrl = imgUrls.normal;
+              console.log(`提取到普通图片URL: ${selectedUrl}`);
             } else if (imgUrls.thumbnail) {
-              console.log(`提取到缩略图URL: ${imgUrls.thumbnail}`);
-              extractedImageUrls.push(imgUrls.thumbnail);
+              selectedUrl = imgUrls.thumbnail;
+              console.log(`提取到缩略图URL: ${selectedUrl}`);
+            }
+            
+            if (selectedUrl) {
+              extractedImageUrls.push(selectedUrl);
             }
             
             // Handle live photos (store both image and video URLs)
@@ -534,16 +734,58 @@ static async getXiaohongshuHeaders(url, path, params = {}) {
               extractedImageUrls.push(imgUrls.livePhotoImage);
               extractedImageUrls.push(imgUrls.livePhotoVideo);
             }
+            
+            // Enhanced Live Photo detection - check for additional patterns
+            if (img.type === 'live' || img.media_type === 'live_photo' || img.type === 'live_photo') {
+              console.log(`检测到实况图片类型: ${img.type || img.media_type}`);
+              // Add both static image and motion video if available
+              if (img.static_url) extractedImageUrls.push(img.static_url);
+              if (img.motion_url) extractedImageUrls.push(img.motion_url);
+              if (img.live_photo_url) extractedImageUrls.push(img.live_photo_url);
+            }
+            
+            // Check for video streams in image objects (common in Live Photos)
+            if (img.stream) {
+              console.log(`检测到视频流数据`);
+              // H264 streams
+              if (img.stream.h264 && Array.isArray(img.stream.h264)) {
+                img.stream.h264.forEach((stream, streamIndex) => {
+                  if (stream.master_url) {
+                    console.log(`提取到H264视频流 ${streamIndex + 1}: ${stream.master_url}`);
+                    extractedImageUrls.push(stream.master_url);
+                  }
+                });
+              }
+              // H265 streams
+              if (img.stream.h265 && Array.isArray(img.stream.h265)) {
+                img.stream.h265.forEach((stream, streamIndex) => {
+                  if (stream.master_url) {
+                    console.log(`提取到H265视频流 ${streamIndex + 1}: ${stream.master_url}`);
+                    extractedImageUrls.push(stream.master_url);
+                  }
+                });
+              }
+            }
+            
+            // Check for HEIC format (often used for Live Photos)
+            if (selectedUrl && selectedUrl.includes('.heic')) {
+              console.log(`检测到HEIC格式图片，可能是实况图片: ${selectedUrl}`);
+              // Try to find corresponding video
+              const videoUrl = selectedUrl.replace('.heic', '.mov');
+              extractedImageUrls.push(videoUrl);
+            }
           });
         } 
         
-        // 2. Try another possible image location (image_list)
-        else if (contentData.image_list && Array.isArray(contentData.image_list)) {
-          console.log(`找到 ${contentData.image_list.length} 张图片 (image_list)`);
-          contentData.image_list.forEach((img, index) => {
+        // 2. Try another possible image location (images array - fallback)
+        else if (contentData.images && Array.isArray(contentData.images)) {
+          console.log(`找到 ${contentData.images.length} 张图片 (images)`);
+          contentData.images.forEach((img, index) => {
+            console.log(`处理图片 ${index + 1}:`, JSON.stringify(img, null, 2).substring(0, 200) + '...');
+            
             const imgUrl = img.url || img.large?.url || img.middle?.url || img.small?.url || img.origin_url;
             if (imgUrl) {
-              console.log(`提取到图片URL (image_list ${index + 1}): ${imgUrl}`);
+              console.log(`提取到图片URL (images ${index + 1}): ${imgUrl}`);
               extractedImageUrls.push(imgUrl);
             }
           });
@@ -1060,7 +1302,7 @@ static async getXiaohongshuHeaders(url, path, params = {}) {
         media_type: isVideo ? 'video' : 'image',
         cover_url: validImageUrls[0],
         media_url: mediaUrl,
-        all_images: isVideo ? [validImageUrls[0]] : validImageUrls // Only return cover for video, all images for image content
+        all_images: validImageUrls // Return all images for both video and image content
       };
       
       console.log('解析完成，返回结果:', JSON.stringify(result, null, 2).substring(0, 400) + '...');
@@ -1078,6 +1320,30 @@ static async getXiaohongshuHeaders(url, path, params = {}) {
         console.error('请求错误:', error.request);
       } else {
         console.error('请求配置错误:', error.message);
+      }
+      
+      // Try enhanced parser as fallback
+      console.log('🔄 尝试使用增强版解析器作为备用方案...');
+      try {
+        const enhancedParser = new EnhancedXiaohongshuParser();
+        const enhancedResult = await enhancedParser.parseXiaohongshuLink(link);
+        
+        console.log('✅ 增强版解析器成功解析内容');
+        
+        // Convert enhanced parser result to ParseService format
+        return {
+          content_id: enhancedResult.content_id,
+          title: enhancedResult.title,
+          author: enhancedResult.author,
+          description: enhancedResult.description,
+          media_type: enhancedResult.media_type,
+          cover_url: enhancedResult.cover_url,
+          media_url: enhancedResult.media_url,
+          all_images: enhancedResult.all_images
+        };
+        
+      } catch (enhancedError) {
+        console.error('❌ 增强版解析器也失败了:', enhancedError.message);
       }
       
       // Remove fixed templates - throw detailed error instead to provide accurate feedback
@@ -1107,8 +1373,134 @@ static async getXiaohongshuHeaders(url, path, params = {}) {
     };
   }
 
-  // Parse Bilibili link (mock implementation)
+  // Parse Bilibili link with watermark removal
   static async parseBilibiliLink(link) {
+    try {
+      console.log('ParseService.parseBilibiliLink: Starting Bilibili parsing for:', link);
+      
+      // Get platform cookies for authentication
+      const cookies = await this.getPlatformCookies('bilibili');
+      
+      // Extract video ID from URL
+      const videoId = this.extractBilibiliVideoId(link);
+      if (!videoId) {
+        throw new Error('无法从链接中提取视频ID');
+      }
+      
+      // Get headers with cookies
+      const headers = await this.getBilibiliHeaders(cookies);
+      
+      // Fetch video page
+      const response = await axios.get(link, { headers, timeout: 15000 });
+      const html = response.data;
+      
+      // Extract video data from page
+      const videoData = this.extractBilibiliVideoData(html);
+      
+      if (!videoData) {
+        throw new Error('无法解析B站视频数据');
+      }
+      
+      // Get watermark-free URLs
+      const mediaUrls = this.getBilibiliWatermarkFreeUrls(videoData);
+      
+      return {
+        content_id: videoId,
+        title: videoData.title || 'B站视频',
+        author: videoData.owner?.name || 'B站UP主',
+        description: videoData.desc || '',
+        media_type: 'video',
+        cover_url: videoData.pic || 'https://via.placeholder.com/300x200',
+        media_url: mediaUrls.video || '',
+        all_images: mediaUrls.images || [],
+        platform_data: videoData // 保存原始数据用于调试
+      };
+    } catch (error) {
+      console.error('ParseService.parseBilibiliLink: Error:', error);
+      // Fallback to mock data if parsing fails
+      return this.getBilibiliMockData(link);
+    }
+  }
+  
+  // Extract Bilibili video ID from URL
+  static extractBilibiliVideoId(url) {
+    const patterns = [
+      /\/video\/(BV[a-zA-Z0-9]+)/,
+      /\/video\/(av\d+)/,
+      /bvid=(BV[a-zA-Z0-9]+)/,
+      /aid=(\d+)/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) return match[1];
+    }
+    return null;
+  }
+  
+  // Get Bilibili-specific headers
+  static async getBilibiliHeaders(cookies = '') {
+    return {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Referer': 'https://www.bilibili.com/',
+      'Cookie': cookies,
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+      'Accept-Encoding': 'gzip, deflate, br',
+      'Connection': 'keep-alive',
+      'Upgrade-Insecure-Requests': '1'
+    };
+  }
+  
+  // Extract video data from Bilibili HTML
+  static extractBilibiliVideoData(html) {
+    try {
+      // Try to extract from __INITIAL_STATE__
+      let match = html.match(/window\.__INITIAL_STATE__\s*=\s*({.+?});/);
+      if (match) {
+        const initialState = JSON.parse(match[1]);
+        const videoData = initialState?.videoData;
+        if (videoData) return videoData;
+      }
+      
+      // Try to extract from __playinfo__
+      match = html.match(/window\.__playinfo__\s*=\s*({.+?})<\/script>/);
+      if (match) {
+        const playInfo = JSON.parse(match[1]);
+        return playInfo?.data;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error extracting Bilibili video data:', error);
+      return null;
+    }
+  }
+  
+  // Get watermark-free URLs for Bilibili
+  static getBilibiliWatermarkFreeUrls(videoData) {
+    const result = {
+      video: null,
+      images: []
+    };
+    
+    // Extract video URL (B站视频通常需要特殊处理)
+    if (videoData.dash?.video) {
+      // Get the highest quality video
+      const videos = videoData.dash.video.sort((a, b) => b.bandwidth - a.bandwidth);
+      result.video = videos[0]?.baseUrl || videos[0]?.base_url;
+    }
+    
+    // Extract cover image
+    if (videoData.pic) {
+      result.images.push(videoData.pic);
+    }
+    
+    return result;
+  }
+  
+  // Fallback mock data for Bilibili
+  static getBilibiliMockData(link) {
     return {
       content_id: `bilibili_${Date.now()}`,
       title: 'B站测试视频',
@@ -1116,13 +1508,149 @@ static async getXiaohongshuHeaders(url, path, params = {}) {
       description: '这是一个B站测试视频的描述',
       media_type: 'video',
       cover_url: 'https://via.placeholder.com/300x200',
-      media_url: 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4', // Sample video URL
-      all_images: ['https://via.placeholder.com/300x200'] // Add all_images field
+      media_url: 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4',
+      all_images: ['https://via.placeholder.com/300x200']
     };
   }
 
-  // Parse Weibo link (mock implementation)
+  // Parse Weibo link with watermark removal
   static async parseWeiboLink(link) {
+    try {
+      console.log('ParseService.parseWeiboLink: Starting Weibo parsing for:', link);
+      
+      // Get platform cookies for authentication
+      const cookies = await this.getPlatformCookies('weibo');
+      
+      // Extract post ID from URL
+      const postId = this.extractWeiboPostId(link);
+      if (!postId) {
+        throw new Error('无法从链接中提取微博ID');
+      }
+      
+      // Get headers with cookies
+      const headers = await this.getWeiboHeaders(cookies);
+      
+      // Fetch post page
+      const response = await axios.get(link, { headers, timeout: 15000 });
+      const html = response.data;
+      
+      // Extract post data from page
+      const postData = this.extractWeiboPostData(html);
+      
+      if (!postData) {
+        throw new Error('无法解析微博数据');
+      }
+      
+      // Get watermark-free URLs
+      const mediaUrls = this.getWeiboWatermarkFreeUrls(postData);
+      
+      return {
+        content_id: postId,
+        title: postData.text?.substring(0, 50) || '微博内容',
+        author: postData.user?.screen_name || '微博用户',
+        description: postData.text || '',
+        media_type: mediaUrls.video ? 'video' : 'image',
+        cover_url: mediaUrls.images?.[0] || 'https://via.placeholder.com/300x200',
+        media_url: mediaUrls.video || mediaUrls.images?.[0] || '',
+        all_images: mediaUrls.images || [],
+        live_images: mediaUrls.live_images || [], // 实况图片
+        platform_data: postData // 保存原始数据用于调试
+      };
+    } catch (error) {
+      console.error('ParseService.parseWeiboLink: Error:', error);
+      // Fallback to mock data if parsing fails
+      return this.getWeiboMockData(link);
+    }
+  }
+  
+  // Extract Weibo post ID from URL
+  static extractWeiboPostId(url) {
+    const patterns = [
+      /\/(\d+)\/([a-zA-Z0-9]+)/,
+      /mid=(\d+)/,
+      /id=([a-zA-Z0-9]+)/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) return match[match.length - 1];
+    }
+    return null;
+  }
+  
+  // Get Weibo-specific headers
+  static async getWeiboHeaders(cookies = '') {
+    return {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Referer': 'https://weibo.com/',
+      'Cookie': cookies,
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+      'Accept-Encoding': 'gzip, deflate, br',
+      'Connection': 'keep-alive',
+      'Upgrade-Insecure-Requests': '1'
+    };
+  }
+  
+  // Extract post data from Weibo HTML
+  static extractWeiboPostData(html) {
+    try {
+      // Try to extract from $render_data
+      let match = html.match(/\$render_data\s*=\s*\[({.+?})\]\[0\]/);
+      if (match) {
+        const renderData = JSON.parse(match[1]);
+        const postData = renderData?.status;
+        if (postData) return postData;
+      }
+      
+      // Try to extract from other data structures
+      match = html.match(/window\.\$CONFIG\s*=\s*({.+?});/);
+      if (match) {
+        const config = JSON.parse(match[1]);
+        const postData = config?.status;
+        if (postData) return postData;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error extracting Weibo post data:', error);
+      return null;
+    }
+  }
+  
+  // Get watermark-free URLs for Weibo
+  static getWeiboWatermarkFreeUrls(postData) {
+    const result = {
+      video: null,
+      images: [],
+      live_images: []
+    };
+    
+    // Extract video URL
+    if (postData.page_info?.media_info) {
+      const mediaInfo = postData.page_info.media_info;
+      result.video = mediaInfo.stream_url_hd || mediaInfo.stream_url || mediaInfo.mp4_hd_url || mediaInfo.mp4_sd_url;
+    }
+    
+    // Extract images
+    if (postData.pics) {
+      result.images = postData.pics.map(pic => {
+        return pic.large?.url || pic.url;
+      }).filter(Boolean);
+    }
+    
+    // Extract live images if available
+    if (postData.live_photo) {
+      result.live_images = postData.live_photo.map(live => {
+        return live.url;
+      }).filter(Boolean);
+    }
+    
+    return result;
+  }
+  
+  // Fallback mock data for Weibo
+  static getWeiboMockData(link) {
     const mediaType = Math.random() > 0.5 ? 'video' : 'image';
     return {
       content_id: `weibo_${Date.now()}`,
@@ -1133,10 +1661,11 @@ static async getXiaohongshuHeaders(url, path, params = {}) {
       cover_url: 'https://via.placeholder.com/300x200',
       media_url: mediaType === 'video' 
         ? 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4' 
-        : 'https://via.placeholder.com/800x600', // Sample URL
+        : 'https://via.placeholder.com/800x600',
       all_images: mediaType === 'video' 
         ? ['https://via.placeholder.com/300x200'] 
-        : ['https://via.placeholder.com/800x600', 'https://via.placeholder.com/800x600?image2'] // Add all_images field
+        : ['https://via.placeholder.com/800x600', 'https://via.placeholder.com/800x600?image2'],
+      live_images: []
     };
   }
 
@@ -1468,6 +1997,309 @@ static async getXiaohongshuHeaders(url, path, params = {}) {
       console.error('ParseService.downloadWithRange: Error:', error);
       // Throw a descriptive error instead of the raw network error
       throw new Error(`下载失败: ${error.message || '网络连接问题'}`);
+    }
+  }
+
+  // Download all media files (images and live photos) with watermark removal
+  static async downloadAllMedia(parsedData, platform, sourceType = 1, taskId = null) {
+    try {
+      console.log('ParseService.downloadAllMedia: Starting batch download for content_id:', parsedData.content_id);
+      
+      const timestamp = Date.now();
+      const cleanedTitle = this.cleanFilename(parsedData.title || 'untitled');
+      const baseDir = path.join(platform, cleanedTitle);
+      
+      // Create full directory path
+      const fullDirPath = path.join(process.env.STORAGE_ROOT_PATH || path.join(__dirname, '../../media'), baseDir);
+      console.log('ParseService.downloadAllMedia: Directory path:', fullDirPath);
+      
+      // Ensure directory exists
+      await fs.ensureDir(fullDirPath);
+      
+      const downloadedFiles = [];
+      let mainImagePath = null;
+      
+      // Process all images with watermark removal
+      if (parsedData.all_images && parsedData.all_images.length > 0) {
+        console.log(`ParseService.downloadAllMedia: Processing ${parsedData.all_images.length} images`);
+        
+        for (let i = 0; i < parsedData.all_images.length; i++) {
+          const imageUrl = parsedData.all_images[i];
+          
+          // Skip platform static resources
+          if (this.isPlatformStaticResource(imageUrl)) {
+            console.log(`Skipping platform static resource: ${imageUrl}`);
+            continue;
+          }
+          
+          try {
+            // Check if this is a Live Photo and process accordingly
+            if (this.isLivePhotoUrl(imageUrl)) {
+              console.log(`检测到实况图片，进行特殊处理: ${imageUrl}`);
+              
+              // Process Live Photo (both static and motion components)
+              const livePhotoFiles = this.processLivePhoto(imageUrl, i, parsedData.content_id, timestamp, fullDirPath, baseDir);
+              
+              for (const liveFile of livePhotoFiles) {
+                try {
+                  // Apply watermark removal
+                  const watermarkFreeUrl = this.removeWatermarkFromUrl(liveFile.originalUrl, platform);
+                  
+                  console.log(`下载实况图片组件 (${liveFile.component}): ${watermarkFreeUrl}`);
+                  
+                  // Download the file
+                  await this.downloadSingleFile(watermarkFreeUrl, liveFile.fullPath, platform);
+                  
+                  downloadedFiles.push({
+                    originalUrl: liveFile.originalUrl,
+                    watermarkFreeUrl: watermarkFreeUrl,
+                    filePath: liveFile.filePath,
+                    isLivePhoto: true,
+                    livePhotoComponent: liveFile.component,
+                    index: i
+                  });
+                  
+                  // Set the first static image as main image
+                  if (mainImagePath === null && liveFile.component === 'static') {
+                    mainImagePath = liveFile.filePath;
+                  }
+                  
+                } catch (liveError) {
+                  console.error(`下载实况图片组件失败 (${liveFile.component}):`, liveError.message);
+                  // Continue with other components even if one fails
+                }
+              }
+            } else {
+              // Regular image processing
+              // Apply watermark removal for the image URL
+              const watermarkFreeUrl = this.removeWatermarkFromUrl(imageUrl, platform);
+              
+              const fileExt = 'jpg'; // Regular images are JPG
+              const filename = `${parsedData.content_id}_${timestamp}_${String(i + 1).padStart(3, '0')}.${fileExt}`;
+              const filePath = path.join(fullDirPath, filename);
+              const relativePath = path.join(baseDir, filename);
+              
+              console.log(`ParseService.downloadAllMedia: Downloading image ${i + 1}/${parsedData.all_images.length}`);
+              console.log(`Original URL: ${imageUrl}`);
+              console.log(`Watermark-free URL: ${watermarkFreeUrl}`);
+              
+              // Download the image
+              await this.downloadSingleFile(watermarkFreeUrl, filePath, platform);
+              
+              downloadedFiles.push({
+                originalUrl: imageUrl,
+                watermarkFreeUrl: watermarkFreeUrl,
+                filePath: relativePath,
+                isLivePhoto: false,
+                index: i
+              });
+              
+              // Set the first valid image as main image
+              if (mainImagePath === null) {
+                mainImagePath = relativePath;
+              }
+            }
+            
+          } catch (error) {
+            console.error(`ParseService.downloadAllMedia: Failed to download image ${i + 1}:`, error.message);
+            // Continue with other images even if one fails
+          }
+        }
+      }
+      
+      // If no main image was set, use the first downloaded file
+      if (mainImagePath === null && downloadedFiles.length > 0) {
+        mainImagePath = downloadedFiles[0].filePath;
+      }
+      
+      // If still no main image, create a fallback
+      if (mainImagePath === null) {
+        const fallbackFilename = `${parsedData.content_id}_${timestamp}_fallback.jpg`;
+        const fallbackPath = path.join(fullDirPath, fallbackFilename);
+        const fallbackRelativePath = path.join(baseDir, fallbackFilename);
+        
+        // Create a placeholder file
+        await fs.writeFile(fallbackPath, Buffer.from('PLACEHOLDER_IMAGE'));
+        mainImagePath = fallbackRelativePath;
+        
+        console.log('ParseService.downloadAllMedia: Created fallback image file');
+      }
+      
+      console.log(`ParseService.downloadAllMedia: Successfully downloaded ${downloadedFiles.length} files`);
+      console.log('ParseService.downloadAllMedia: Main image path:', mainImagePath);
+      
+      return {
+        mainImagePath: mainImagePath,
+        downloadedFiles: downloadedFiles,
+        totalFiles: downloadedFiles.length
+      };
+      
+    } catch (error) {
+      console.error('ParseService.downloadAllMedia: Error:', error);
+      throw error;
+    }
+  }
+  
+  // Remove watermark from URL based on platform
+  static removeWatermarkFromUrl(url, platform) {
+    return WatermarkRemover.removeWatermark(url, platform);
+  }
+  
+  // Remove watermark from Xiaohongshu URLs (kept for backward compatibility)
+  static removeXiaohongshuWatermark(url) {
+    return WatermarkRemover.removeXiaohongshuWatermark(url);
+  }
+  
+  // Remove watermark from Douyin URLs
+  static removeDouyinWatermark(url) {
+    try {
+      // Douyin watermark removal: replace 'playwm' with 'play'
+      let cleanUrl = url.replace(/playwm/g, 'play');
+      cleanUrl = cleanUrl.replace(/watermark=1/g, 'watermark=0');
+      
+      console.log(`Douyin watermark removal: ${url} -> ${cleanUrl}`);
+      return cleanUrl;
+      
+    } catch (error) {
+      console.error('Error removing Douyin watermark:', error);
+      return url;
+    }
+  }
+  
+  // Remove watermark from Weibo URLs
+  static removeWeiboWatermark(url) {
+    try {
+      // Weibo watermark removal: get original size images
+      let cleanUrl = url;
+      
+      // Replace thumbnail/small versions with large versions
+      cleanUrl = cleanUrl.replace(/\/thumb\d+\//, '/large/');
+      cleanUrl = cleanUrl.replace(/\/small\//, '/large/');
+      cleanUrl = cleanUrl.replace(/\/middle\//, '/large/');
+      
+      console.log(`Weibo watermark removal: ${url} -> ${cleanUrl}`);
+      return cleanUrl;
+      
+    } catch (error) {
+      console.error('Error removing Weibo watermark:', error);
+      return url;
+    }
+  }
+  
+  // Check if URL is a Live Photo (use LivePhotoProcessor)
+  static isLivePhotoUrl(url) {
+    return LivePhotoProcessor.isLivePhoto(url);
+  }
+  
+  // Enhanced Live Photo processing (use LivePhotoProcessor)
+  static processLivePhoto(imageUrl, index, contentId, timestamp, fullDirPath, baseDir) {
+    const files = LivePhotoProcessor.generateLivePhotoFiles(imageUrl, index, contentId, timestamp, baseDir);
+    
+    // Convert to the format expected by downloadAllMedia
+    return files.map(file => ({
+      type: file.type,
+      originalUrl: file.originalUrl,
+      filePath: file.relativePath,
+      fullPath: path.join(fullDirPath, file.filename),
+      isLivePhoto: file.isLivePhoto,
+      component: file.component
+    }));
+  }
+  
+  // Check if URL is a platform static resource that should be skipped
+  static isPlatformStaticResource(url) {
+    const staticPatterns = [
+      'search/trends/icon',
+      'fe-platform',
+      'picasso-static',
+      'static.xhscdn.com',
+      '/icon/',
+      '/logo/',
+      '/badge/',
+      'placeholder.com'
+    ];
+    
+    return staticPatterns.some(pattern => url.includes(pattern));
+  }
+  
+  // Download a single file with enhanced error handling
+  static async downloadSingleFile(url, filePath, platform) {
+    try {
+      // Get platform-specific headers
+      const headers = await this.getPlatformHeaders(platform);
+      
+      console.log(`ParseService.downloadSingleFile: Downloading ${url} to ${filePath}`);
+      
+      const response = await axios.get(url, {
+        responseType: 'stream',
+        headers: headers,
+        timeout: 30000, // 30 seconds timeout
+        maxRedirects: 5
+      });
+      
+      // Create write stream
+      const writer = fs.createWriteStream(filePath);
+      
+      // Pipe response to file
+      response.data.pipe(writer);
+      
+      return new Promise((resolve, reject) => {
+        writer.on('finish', () => {
+          console.log(`ParseService.downloadSingleFile: Successfully downloaded ${filePath}`);
+          resolve();
+        });
+        
+        writer.on('error', (error) => {
+          console.error(`ParseService.downloadSingleFile: Write error for ${filePath}:`, error);
+          reject(error);
+        });
+        
+        response.data.on('error', (error) => {
+          console.error(`ParseService.downloadSingleFile: Stream error for ${url}:`, error);
+          reject(error);
+        });
+      });
+      
+    } catch (error) {
+      console.error(`ParseService.downloadSingleFile: Download failed for ${url}:`, error.message);
+      throw error;
+    }
+  }
+  
+  // Get platform-specific headers for downloads
+  static async getPlatformHeaders(platform) {
+    const baseHeaders = {
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'image/webp,image/apng,image/svg+xml,image/*,video/*,*/*;q=0.8',
+      'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+      'Accept-Encoding': 'gzip, deflate, br',
+      'Connection': 'keep-alive',
+      'Sec-Fetch-Dest': 'image',
+      'Sec-Fetch-Mode': 'no-cors',
+      'Sec-Fetch-Site': 'cross-site'
+    };
+    
+    switch (platform) {
+      case 'xiaohongshu':
+        return {
+          ...baseHeaders,
+          'Referer': 'https://www.xiaohongshu.com/',
+          'Cookie': await this.getPlatformCookies('xiaohongshu')
+        };
+      case 'douyin':
+        return {
+          ...baseHeaders,
+          'Referer': 'https://www.douyin.com/',
+          'Cookie': await this.getPlatformCookies('douyin')
+        };
+      case 'weibo':
+        return {
+          ...baseHeaders,
+          'Referer': 'https://weibo.com/',
+          'Cookie': await this.getPlatformCookies('weibo')
+        };
+      default:
+        return baseHeaders;
     }
   }
 

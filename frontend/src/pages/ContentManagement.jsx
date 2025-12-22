@@ -64,7 +64,11 @@ const ContentManagement = () => {
       title: '类型',
       dataIndex: 'media_type',
       key: 'media_type',
-      render: (type) => type === 'video' ? '视频' : '图片'
+      render: (type, record) => {
+        const typeText = type === 'video' ? '视频' : '图片';
+        const imageCount = record.all_images && record.all_images.length > 0 ? record.all_images.length : 1;
+        return type === 'image' && imageCount > 1 ? `${typeText} (${imageCount}张)` : typeText;
+      }
     },
     {
       title: '来源',
@@ -385,7 +389,7 @@ const ContentManagement = () => {
         open={previewVisible}
         onCancel={() => setPreviewVisible(false)}
         footer={null}
-        width={800}
+        width={900}
       >
         {previewContent && (
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
@@ -396,12 +400,51 @@ const ContentManagement = () => {
               style={{ width: '100%', maxHeight: '400px' }}
             />
           ) : (
-            <Image
-              src={`/api/v1/content/proxy-image?url=${encodeURIComponent(previewContent.cover_url)}`}
-              alt={previewContent.title}
-              style={{ maxWidth: '100%', maxHeight: '400px' }}
-              fallback="https://via.placeholder.com/400x300?text=图片加载失败"
-            />
+            <>
+              {/* 显示所有图片 */}
+              {previewContent.all_images && previewContent.all_images.length > 0 ? (
+                <div>
+                  <h4>图片列表 ({previewContent.all_images.length}张)</h4>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', 
+                    gap: '10px',
+                    maxHeight: '500px',
+                    overflowY: 'auto',
+                    padding: '10px',
+                    backgroundColor: '#f5f5f5',
+                    borderRadius: '8px'
+                  }}>
+                    {previewContent.all_images.map((imgUrl, index) => (
+                      <div key={index} style={{ textAlign: 'center' }}>
+                        <Image
+                          src={`/api/v1/content/proxy-image?url=${encodeURIComponent(imgUrl)}`}
+                          alt={`图片 ${index + 1}`}
+                          style={{ 
+                            width: '100%', 
+                            height: '150px', 
+                            objectFit: 'cover', 
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                          }}
+                          fallback="https://via.placeholder.com/150x150?text=加载失败"
+                        />
+                        <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+                          图片 {index + 1}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <Image
+                  src={`/api/v1/content/proxy-image?url=${encodeURIComponent(previewContent.cover_url)}`}
+                  alt={previewContent.title}
+                  style={{ maxWidth: '100%', maxHeight: '400px' }}
+                  fallback="https://via.placeholder.com/400x300?text=图片加载失败"
+                />
+              )}
+            </>
           )}
             <div style={{ marginBottom: '16px' }}>
               <h4>基本信息</h4>

@@ -208,6 +208,13 @@ const apiService = {
     deleteCookie: (id) => api.delete(`/config/cookies/${id}`),
     testCookie: (id) => api.post(`/config/cookies/${id}/test`),
     
+    // Platform Cookie management
+    getPlatformCookies: () => api.get('/config/platform-cookies'),
+    createPlatformCookie: (data) => api.post('/config/platform-cookies', data),
+    updatePlatformCookie: (id, data) => api.put(`/config/platform-cookies/${id}`, data),
+    deletePlatformCookie: (id) => api.delete(`/config/platform-cookies/${id}`),
+    testPlatformCookie: (id) => api.post(`/config/platform-cookies/${id}/test`),
+    
     // System settings
     getSystemSettings: () => api.get('/config/system'),
     updateSystemSettings: (data) => api.put('/config/system', data)

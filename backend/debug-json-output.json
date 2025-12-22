@@ -1,0 +1,288 @@
+{
+  "global": {
+    "appSettings": {
+      "fakeModalPercent": 0.02,
+      "fakeModalWhiteList": [],
+      "launchAppConfig": "{\n  \"dslVersion\": 1,\n  \"strategies\": {\n    \"launchApp\": {\n      \"android\": {\n        \"wechat\": [\n          \"wxopentag\",\n          \"tencentAppStore\"\n        ],\n        \"qqclient\": [\n          \"tencentAppStore\"\n        ],\n        \"qqbrowser\": [\n          \"urlschema\",\n          \"jumpinstallurl\"\n        ],\n        \"weibo\": [\n          \"urlschema\",\n          \"jumpinstallurl\"\n        ],\n        \"sogou\": [\n          \"urlschema\",\n          \"jumpinstallurl\"\n        ],\n        \"uc\": [\n          \"urlschema\",\n          \"jumpinstallurl\"\n        ],\n        \"other\": [\n          \"urlschema\",\n          \"jumpinstallurl\"\n        ]\n      },\n      \"ios\": {\n        \"wechat\": [\n          \"wxopentag\",\n          \"universallink\"\n        ],\n        \"qqclient\": [\n          \"urlschemataga\"\n        ],\n        \"weibo\": [\n          \"urlschema\",\n          \"jumpinstallurl\"\n        ],\n        \"sogou\": [\n          \"urlschema\",\n          \"jumpinstallurl\"\n        ],\n        \"qqbrowser\": [\n          \"urlschema\",\n          \"jumpinstallurl\"\n        ],\n        \"uc\": [\n          \"urlschema\",\n          \"jumpinstallurl\"\n        ],\n        \"other\": [\n          \"universallink\"\n        ]\n      },\n      \"harmonyos\": {\n        \"harmonyos\": [\n          \"universallink\"\n        ],\n        \"wechat\": [\n          \"universallink\"\n        ],\n        \"qqclient\": [\n          \"universallink\"\n        ],\n        \"weibo\": [\n          \"universallink\"\n        ],\n        \"sogou\": [\n          \"universallink\"\n        ],\n        \"qqbrowser\": [\n          \"universallink\"\n        ],\n        \"uc\": [\n          \"universallink\"\n        ],\n        \"other\": [\n          \"universallink\"\n        ]\n      },\n      \"other\": {\n        \"wechat\": [\n          \"wxopentag\",\n          \"tencentAppStore\"\n        ],\n        \"qqclient\": [\n          \"tencentAppStore\"\n        ],\n        \"weibo\": [\n          \"urlschema\",\n          \"jumpinstallurl\"\n        ],\n        \"sogou\": [\n          \"urlschema\",\n          \"jumpinstallurl\"\n        ],\n        \"qqbrowser\": [\n          \"urlschema\",\n          \"jumpinstallurl\"\n        ],\n        \"uc\": [\n          \"urlschema\",\n          \"jumpinstallurl\"\n        ],\n        \"other\": [\n          \"urlschema\",\n          \"jumpinstallurl\"\n        ]\n      }\n    }\n  }\n}",
+      "noteBackProfile": true,
+      "cacheLimit": 100001,
+      "playLaunch": "enable",
+      "jsAssetsList": null,
+      "scrollLaunchAppPercent": null
+    },
+    "visitMobileFromAndroidWxGuide": false,
+    "androidWxWebId": "",
+    "shareContext": null,
+    "supportWebp": false,
+    "acceptLanguageFromHeader": "zh-CN,zh;q=0.9,en;q=0.8",
+    "language": "zh_cn"
+  },
+  "fakeModal": {
+    "fakeModalVisible": false,
+    "modalAppendParams": {
+      "source": "",
+      "deeplink": ""
+    },
+    "enableFakeModal": false,
+    "launchSuccessCallback": null
+  },
+  "noteData": {
+    "routeQuery": {
+      "source": "xhs_sec_server",
+      "originalUrl": "http://www.xiaohongshu.com/explore/694269d1000000001f00dc48"
+    },
+    "data": {},
+    "config": {
+      "articleExpand": false
+    },
+    "flags": "",
+    "serverFlags": "",
+    "initializedLaunchOpenAppTag": [],
+    "openTagMetaData": {},
+    "collectionData": {
+      "id": "",
+      "name": "",
+      "desc": "",
+      "noteNum": 0,
+      "paid": false,
+      "totalEpisodes": 0,
+      "deeplink": "xhsdiscover://home/explore",
+      "userInfo": {
+        "nickName": "",
+        "avatarUrl": ""
+      },
+      "type": 0,
+      "shareInfo": {
+        "shareDesc": "",
+        "shareImage": "",
+        "shareLink": "",
+        "stareTitle": ""
+      },
+      "noteList": [],
+      "error": {
+        "msg": "",
+        "status": 200
+      }
+    },
+    "realUserId": "",
+    "hasError": false,
+    "expGroups": "",
+    "hotlistData": [
+      {
+        "id": "dora_1969515",
+        "icon": "https://picasso-static.xiaohongshu.com/fe-platform/cfd317ff14757c7ede6ef5176ec487589565e49e.png",
+        "type": "normal",
+        "word_type": "热",
+        "score": "932.6w",
+        "rank_change": 17,
+        "title_img": "",
+        "title": "哈尔滨大雪人连夜补妆"
+      },
+      {
+        "title": "冬天就要拍这个比耶转场",
+        "id": "dora_1969470",
+        "icon": "https://picasso-static.xiaohongshu.com/fe-platform/cfd317ff14757c7ede6ef5176ec487589565e49e.png",
+        "type": "normal",
+        "word_type": "热",
+        "score": "846w",
+        "rank_change": 9,
+        "title_img": ""
+      },
+      {
+        "score": "682.1w",
+        "rank_change": 0,
+        "title_img": "",
+        "title": "跨年美甲已备好",
+        "id": "dora_1969637",
+        "icon": "https://picasso-static.xiaohongshu.com/fe-platform/cfd317ff14757c7ede6ef5176ec487589565e49e.png",
+        "type": "normal",
+        "word_type": "热"
+      },
+      {
+        "word_type": "热",
+        "score": "612.4w",
+        "rank_change": 0,
+        "title_img": "",
+        "title": "一次性信用修复政策来了",
+        "id": "dora_1967768",
+        "icon": "https://picasso-static.xiaohongshu.com/fe-platform/cfd317ff14757c7ede6ef5176ec487589565e49e.png",
+        "type": "normal"
+      },
+      {
+        "score": "607.5w",
+        "rank_change": 0,
+        "title_img": "",
+        "title": "福原爱再婚怀孕",
+        "id": "dora_1968080",
+        "icon": "https://picasso-static.xiaohongshu.com/fe-platform/cfd317ff14757c7ede6ef5176ec487589565e49e.png",
+        "type": "normal",
+        "word_type": "热"
+      },
+      {
+        "score": "604.7w",
+        "rank_change": -4,
+        "title_img": "",
+        "title": "什么是正食症",
+        "id": "dora_1968646",
+        "type": "normal",
+        "word_type": "无"
+      },
+      {
+        "rank_change": -1,
+        "title_img": "",
+        "title": "深圳变永劫无间痛城",
+        "id": "dora_1969061",
+        "icon": "https://picasso-static.xiaohongshu.com/fe-platform/cfd317ff14757c7ede6ef5176ec487589565e49e.png",
+        "type": "normal",
+        "word_type": "热",
+        "score": "583.2w"
+      },
+      {
+        "id": "dora_1967021",
+        "icon": "https://sns-img-qc.xhscdn.com/search/trends/icon/label/new/version/1",
+        "type": "normal",
+        "word_type": "新",
+        "score": "566.8w",
+        "rank_change": 2,
+        "title_img": "",
+        "title": "央视曝光旧衣回收产业链内幕"
+      },
+      {
+        "title": "孟子义在星光大赏摔出神图",
+        "id": "dora_1968243",
+        "type": "normal",
+        "word_type": "无",
+        "score": "553.9w",
+        "rank_change": 0,
+        "title_img": ""
+      },
+      {
+        "icon": "https://picasso-static.xiaohongshu.com/fe-platform/cfd317ff14757c7ede6ef5176ec487589565e49e.png",
+        "type": "normal",
+        "word_type": "热",
+        "score": "543.5w",
+        "rank_change": 2,
+        "title_img": "",
+        "title": "当我把橙子皮做成车挂",
+        "id": "dora_1969461"
+      },
+      {
+        "score": "486.8w",
+        "rank_change": 4,
+        "title_img": "",
+        "title": "班主任年终穿搭总结",
+        "id": "dora_1969447",
+        "icon": "https://picasso-static.xiaohongshu.com/fe-platform/cfd317ff14757c7ede6ef5176ec487589565e49e.png",
+        "type": "normal",
+        "word_type": "热"
+      },
+      {
+        "type": "normal",
+        "word_type": "新",
+        "score": "451w",
+        "rank_change": 5,
+        "title_img": "",
+        "title": "旅行主理人的年终旅行故事",
+        "id": "dora_1969486",
+        "icon": "https://sns-img-qc.xhscdn.com/search/trends/icon/label/new/version/1"
+      },
+      {
+        "icon": "https://picasso-static.xiaohongshu.com/fe-platform/cfd317ff14757c7ede6ef5176ec487589565e49e.png",
+        "type": "normal",
+        "word_type": "热",
+        "score": "441.9w",
+        "rank_change": 0,
+        "title_img": "",
+        "title": "梁王组合丢下奖金头也不回走了",
+        "id": "dora_1968017"
+      },
+      {
+        "icon": "https://picasso-static.xiaohongshu.com/fe-platform/cfd317ff14757c7ede6ef5176ec487589565e49e.png",
+        "type": "normal",
+        "word_type": "热",
+        "score": "439.7w",
+        "rank_change": 7,
+        "title_img": "",
+        "title": "这个冬天超好拍的雪花转场",
+        "id": "dora_1969306"
+      },
+      {
+        "title_img": "",
+        "title": "我cos了燕云十六声中的麻布袋",
+        "id": "dora_1968723",
+        "icon": "https://picasso-static.xiaohongshu.com/fe-platform/cfd317ff14757c7ede6ef5176ec487589565e49e.png",
+        "type": "normal",
+        "word_type": "热",
+        "score": "433.6w",
+        "rank_change": 5
+      },
+      {
+        "id": "dora_1969301",
+        "icon": "https://sns-img-qc.xhscdn.com/search/trends/icon/label/new/version/1",
+        "type": "normal",
+        "word_type": "新",
+        "score": "427.4w",
+        "rank_change": -9,
+        "title_img": "",
+        "title": "多家优衣库门店被曝偷拍顾客"
+      },
+      {
+        "word_type": "热",
+        "score": "422.6w",
+        "rank_change": 2,
+        "title_img": "",
+        "title": "宋茜曹骏像来搂席的",
+        "id": "dora_1967980",
+        "icon": "https://picasso-static.xiaohongshu.com/fe-platform/cfd317ff14757c7ede6ef5176ec487589565e49e.png",
+        "type": "normal"
+      },
+      {
+        "type": "normal",
+        "word_type": "新",
+        "score": "404.2w",
+        "rank_change": 6,
+        "title_img": "",
+        "title": "出片主理人的年度18图",
+        "id": "dora_1967858",
+        "icon": "https://sns-img-qc.xhscdn.com/search/trends/icon/label/new/version/1"
+      },
+      {
+        "title": "宝伯特怎么来到现实世界了",
+        "id": "dora_1968253",
+        "icon": "https://picasso-static.xiaohongshu.com/fe-platform/cfd317ff14757c7ede6ef5176ec487589565e49e.png",
+        "type": "normal",
+        "word_type": "热",
+        "score": "379.3w",
+        "rank_change": -3,
+        "title_img": ""
+      },
+      {
+        "title": "个税专项附加扣除将截止",
+        "id": "dora_1968464",
+        "icon": "https://sns-img-qc.xhscdn.com/search/trends/icon/label/new/version/1",
+        "type": "normal",
+        "word_type": "新",
+        "score": "378.7w",
+        "rank_change": 0,
+        "title_img": ""
+      }
+    ],
+    "errorNoteData": {
+      "noteData": {},
+      "userNotes": [],
+      "showLaunchAppModal": false,
+      "show": false,
+      "routeQuery": {
+        "code": "200"
+      },
+      "launchAppModalParams": {
+        "source": "",
+        "deeplink": ""
+      }
+    },
+    "normalNotePreloadData": {}
+  },
+  "notFoundPage": {
+    "noteType": "normal"
+  }
+}

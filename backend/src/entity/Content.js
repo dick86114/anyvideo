@@ -51,6 +51,11 @@ module.exports = new EntitySchema({
       length: 500,
       nullable: false,
     },
+    all_images: {
+      type: 'text',
+      nullable: true,
+      comment: 'JSON array of all image URLs',
+    },
     source_url: {
       type: 'varchar',
       length: 500,

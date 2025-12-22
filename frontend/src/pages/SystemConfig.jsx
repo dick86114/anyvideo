@@ -3,6 +3,7 @@ import { Card, Typography, Space, Tabs, Form, Input, Button, Table, Modal, messa
 import { SettingOutlined, UserOutlined, KeyOutlined, PlusOutlined, EditOutlined, DeleteOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import apiService from '../services/api';
+import PlatformConfig from './PlatformConfig';
 
 const { Title } = Typography;
 const { TabPane } = Tabs;
@@ -513,78 +514,9 @@ const SystemConfig = () => {
           </Modal>
         </TabPane>
         
-        {/* Cookie Management Tab */}
+        {/* Platform Account Configuration Tab */}
         <TabPane tab={<span><KeyOutlined />平台账户配置</span>} key="cookies">
-          <Card title="Cookie管理">
-            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-              <Space style={{ justifyContent: 'flex-end', width: '100%' }}>
-                <Button type="primary" icon={<PlusOutlined />} onClick={handleAddCookie}>添加Cookie</Button>
-              </Space>
-              <Spin spinning={cookieLoading}>
-                <Table 
-                  dataSource={cookies} 
-                  columns={cookieColumns} 
-                  rowKey="_id" 
-                  pagination={{ pageSize: 10 }} 
-                />
-              </Spin>
-            </Space>
-          </Card>
-
-          {/* Cookie Modal */}
-          <Modal
-            title={cookieModalTitle}
-            open={cookieModalVisible}
-            onCancel={() => setCookieModalVisible(false)}
-            footer={null}
-            width={600}
-          >
-            <Form
-              form={cookieForm}
-              layout="vertical"
-              onFinish={handleCookieFormSubmit}
-            >
-              <Form.Item
-                name="platform"
-                label="平台"
-                rules={[{ required: true, message: '请选择平台!' }]}
-              >
-                <Select placeholder="请选择平台">
-                  <Option value="douyin">抖音</Option>
-                  <Option value="xiaohongshu">小红书</Option>
-                  <Option value="weibo">微博</Option>
-                  <Option value="kuaishou">快手</Option>
-                  <Option value="bilibili">B站</Option>
-                </Select>
-              </Form.Item>
-              
-              <Form.Item
-                name="account_alias"
-                label="账户别名"
-                rules={[{ required: true, message: '请输入账户别名!' }]}
-              >
-                <Input placeholder="请输入账户别名（用于识别）" />
-              </Form.Item>
-              
-              <Form.Item
-                name="cookies"
-                label="Cookie内容"
-                rules={[{ required: true, message: '请输入Cookie内容!' }]}
-              >
-                <Input.TextArea 
-                  placeholder="请粘贴完整的Cookie字符串" 
-                  rows={6}
-                />
-              </Form.Item>
-              
-              <Form.Item style={{ textAlign: 'right' }}>
-                <Space>
-                  <Button onClick={() => setCookieModalVisible(false)}>取消</Button>
-                  <Button type="primary" htmlType="submit">确定</Button>
-                </Space>
-              </Form.Item>
-            </Form>
-          </Modal>
+          <PlatformConfig />
         </TabPane>
         
         {/* System Settings Tab */}

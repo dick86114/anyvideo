@@ -132,11 +132,17 @@ class ContentController {
         .take(parseInt(page_size))
         .getMany();
       
+      // Process all_images field - parse JSON strings to arrays
+      const processedContents = contents.map(content => ({
+        ...content,
+        all_images: content.all_images ? JSON.parse(content.all_images) : []
+      }));
+      
       // Prepare response data
       const responseData = {
         message: '获取成功',
         data: {
-          list: contents,
+          list: processedContents,
           total,
           page: parseInt(page),
           page_size: parseInt(page_size)
@@ -675,8 +681,8 @@ class ContentController {
         return res.status(400).json({ message: '不支持的平台链接' });
       }
       
-      // Download media file and save to both database and project root directory
-      const file_path = await ParseService.downloadMedia(parsedData, platform, source_type, task_id);
+      // Download all media files (images and live photos) with watermark removal
+      const downloadResult = await ParseService.downloadAllMedia(parsedData, platform, source_type, task_id);
       
       // Get Content repository from TypeORM
       const contentRepository = AppDataSource.getRepository('Content');
@@ -689,8 +695,9 @@ class ContentController {
         author: parsedData.author,
         description: parsedData.description || '',
         media_type: parsedData.media_type,
-        file_path,
+        file_path: downloadResult.mainImagePath,
         cover_url: parsedData.cover_url,
+        all_images: parsedData.all_images ? JSON.stringify(parsedData.all_images) : null,
         source_url: link,
         source_type: parseInt(source_type),
         task_id,
@@ -701,8 +708,12 @@ class ContentController {
       await contentRepository.save(content);
       
       res.status(201).json({
-        message: '内容保存成功',
-        data: content
+        message: `内容保存成功，共下载${downloadResult.totalFiles}个文件`,
+        data: {
+          ...content,
+          downloadedFiles: downloadResult.downloadedFiles.length,
+          totalFiles: downloadResult.totalFiles
+        }
       });
     } catch (error) {
       console.error('Save content error:', error);
