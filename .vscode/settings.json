@@ -1,4 +1,13 @@
 {
   "CodeFree.index": true,
-  "CodeFree.ignoreFileType": [".so", ".cache", ".exe", ".dll", ".log"]
+  "CodeFree.ignoreFileType": [
+    ".so",
+    ".cache",
+    ".exe",
+    ".dll",
+    ".log"
+  ],
+  "java.project.sourcePaths": [
+    "backend/media"
+  ]
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Form, Input, Button, Card, Typography, Space, message, Progress } from 'antd';
-import { FileSearchOutlined, DownloadOutlined } from '@ant-design/icons';
+import JSZip from 'jszip';
+import { Form, Input, Button, Card, Typography, Space, message, Progress, Modal, Image } from 'antd';
+import { FileSearchOutlined, DownloadOutlined, FileTextOutlined, EyeOutlined } from '@ant-design/icons';
 import apiService from '../services/api';
 
 const { Title } = Typography;
@@ -13,45 +14,141 @@ const ContentParsing = () => {
   const [progress, setProgress] = useState(0); // Progress percentage
   const [downloadProgress, setDownloadProgress] = useState(null); // Download progress
   const [downloadStatus, setDownloadStatus] = useState(null); // Download status: null, 'downloading', 'completed', 'failed'
+  
+  // Image preview modal states
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewImage, setPreviewImage] = useState('');
+  const [previewTitle, setPreviewTitle] = useState('');
+
+  // Handle image preview
+  const handlePreview = (imageUrl, index) => {
+    setPreviewImage(getProxyImageUrl(imageUrl));
+    setPreviewTitle(`图片 ${index + 1}`);
+    setPreviewVisible(true);
+  };
+
+  // Close image preview
+  const handlePreviewCancel = () => {
+    setPreviewVisible(false);
+    setPreviewImage('');
+    setPreviewTitle('');
+  };
 
   // Helper function to get proxy image URL
   const getProxyImageUrl = (imageUrl) => {
-    if (!imageUrl) return 'https://via.placeholder.com/300x200?text=图片加载失败';
+    if (!imageUrl) {
+      console.log('getProxyImageUrl: No image URL provided, returning placeholder');
+      return 'https://via.placeholder.com/300x200?text=图片加载失败';
+    }
     
     try {
       // Use relative path for proxy requests to avoid baseURL issues
-      return `/api/v1/content/proxy-image?url=${encodeURIComponent(imageUrl)}`;
+      const proxyUrl = `/api/v1/content/proxy-image?url=${encodeURIComponent(imageUrl)}`;
+      console.log('getProxyImageUrl:', { originalUrl: imageUrl, proxyUrl });
+      return proxyUrl;
     } catch (error) {
-      console.error('Error generating proxy image URL:', error);
+      console.error('Error generating proxy image URL:', error, { imageUrl });
       return 'https://via.placeholder.com/300x200?text=图片加载失败';
+    }
+  };
+  
+  // Helper function to get proxy video URL
+  const getProxyVideoUrl = (videoUrl) => {
+    if (!videoUrl) {
+      console.log('getProxyVideoUrl: No video URL provided');
+      return '';
+    }
+    
+    try {
+      // Check if video URL is already a local path
+      if (videoUrl.startsWith('/media/')) {
+        console.log('getProxyVideoUrl: Using local video path:', videoUrl);
+        return videoUrl;
+      }
+      
+      // Use relative path for proxy requests to avoid baseURL issues
+      const proxyUrl = `/api/v1/content/proxy-download?url=${encodeURIComponent(videoUrl)}`;
+      console.log('getProxyVideoUrl:', { originalUrl: videoUrl, proxyUrl });
+      return proxyUrl;
+    } catch (error) {
+      console.error('Error generating proxy video URL:', error, { videoUrl });
+      return '';
     }
   };
 
   // Helper function to handle image load errors
   const handleImageError = (e) => {
-    e.target.src = 'https://via.placeholder.com/300x200?text=图片加载失败';
+    console.error('Image load error:', {
+      src: e.target.src,
+      alt: e.target.alt,
+      naturalWidth: e.target.naturalWidth,
+      naturalHeight: e.target.naturalHeight
+    });
+    
+    // Get current retry count from dataset, default to 0 if not exists
+    let retryCount = parseInt(e.target.dataset.retryCount || '0', 10);
+    const maxRetries = 2; // Maximum retry attempts
+    
+    if (retryCount < maxRetries) {
+      // Increment retry count and store back in dataset
+      retryCount++;
+      e.target.dataset.retryCount = retryCount;
+      
+      console.log(`Image retry ${retryCount}/${maxRetries}:`, e.target.src);
+      
+      // Implement exponential backoff - wait 500ms * retryCount before retrying
+      setTimeout(() => {
+        // Append a cache busting parameter to force a fresh request
+        const url = new URL(e.target.src);
+        url.searchParams.set('_retry', retryCount);
+        url.searchParams.set('_timestamp', Date.now());
+        e.target.src = url.toString();
+      }, 500 * retryCount);
+    } else {
+      console.log(`Max retries reached for image:`, e.target.src);
+      // If max retries reached, show placeholder
+      e.target.src = 'https://via.placeholder.com/300x200?text=图片加载失败';
+    }
   };
 
   // Helper function to download a single file using backend proxy
   const downloadFile = async (url, filename) => {
     try {
+      // Validate URL
+      if (!url || typeof url !== 'string') {
+        throw new Error('无效的下载URL');
+      }
+      
+      // Sanitize filename to ensure it's not a hidden file
+      let sanitizedFilename = filename || 'download_file';
+      sanitizedFilename = sanitizedFilename.trim();
+      
+      // If the filename starts with a dot, add a prefix to make it visible
+      if (sanitizedFilename.startsWith('.')) {
+        sanitizedFilename = `file_${sanitizedFilename.substring(1)}`;
+      }
+      
+      // Replace invalid characters in filename
+      sanitizedFilename = sanitizedFilename.replace(/[<>:"/\\|?*]/g, '_');
+      
+      // Ensure the filename is not empty after sanitization
+      if (!sanitizedFilename || sanitizedFilename === '_') {
+        sanitizedFilename = 'download_file';
+      }
+      
       // Show download progress
       setDownloadProgress(0);
       setDownloadStatus('downloading');
       
       // Create a proxy download URL using backend API with relative path
-      const proxyUrl = `/api/v1/content/proxy-download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
+      const proxyUrl = `/api/v1/content/proxy-download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(sanitizedFilename)}`;
       
-      // Set a timeout for the download request (15 seconds)
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('下载超时')), 15000);
-      });
+      console.log('Downloading file:', { originalUrl: url, proxyUrl, filename: sanitizedFilename });
       
       // Create a download link and trigger it
       const link = document.createElement('a');
       link.href = proxyUrl;
-      link.download = filename;
-      link.target = '_blank';
+      link.download = sanitizedFilename;
       document.body.appendChild(link);
       
       // Simulate progress update while waiting for download to start
@@ -86,7 +183,7 @@ const ContentParsing = () => {
       
       return true;
     } catch (error) {
-      console.error('Download error:', error);
+      console.error('Download error:', error, { url, filename });
       setDownloadStatus('failed');
       message.error(`下载失败: ${error.message}`);
       
@@ -99,60 +196,23 @@ const ContentParsing = () => {
     }
   };
 
-  // Handle save to library
-  const handleSaveToLibrary = () => {
-    message.info('保存到内容库功能待实现');
-    // TODO: Implement save to library logic
-  };
-
   // Handle download of all images
-  const handleDownloadAllImages = async () => {
-    if (!parsedResult || !parsedResult.all_images || parsedResult.all_images.length === 0) {
-      message.warning('没有可下载的图片');
-      return;
-    }
-    
+  // Helper function to fetch blob from URL with proxy
+  const fetchFileBlob = async (url) => {
     try {
-      setDownloadProgress(0);
-      setDownloadStatus('downloading');
-      
-      const totalImages = parsedResult.all_images.length;
-      let downloadedCount = 0;
-      
-      // Download all images sequentially
-      for (const [index, imgUrl] of parsedResult.all_images.entries()) {
-        const filename = `${parsedResult.title || '小红书内容'}_${index + 1}.jpg`;
-        const success = await downloadFile(imgUrl, filename);
-        
-        if (success) {
-          downloadedCount++;
-        }
-        
-        // Update overall progress
-        const overallProgress = Math.round(((index + 1) / totalImages) * 100);
-        setDownloadProgress(overallProgress);
+      const proxyUrl = `/api/v1/content/proxy-download?url=${encodeURIComponent(url)}`;
+      const response = await fetch(proxyUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
-      setDownloadStatus('completed');
-      message.success(`成功下载 ${downloadedCount}/${totalImages} 张图片`);
-      
-      setTimeout(() => {
-        setDownloadProgress(null);
-        setDownloadStatus(null);
-      }, 2000);
+      return await response.blob();
     } catch (error) {
-      console.error('Batch download error:', error);
-      setDownloadStatus('failed');
-      message.error(`批量下载失败: ${error.message}`);
-      
-      setTimeout(() => {
-        setDownloadProgress(null);
-        setDownloadStatus(null);
-      }, 2000);
+      console.error('Fetch blob error:', error);
+      throw error;
     }
   };
 
-  // Handle download
+  // Handle download all content
   const handleDownload = async () => {
     if (!parsedResult) {
       message.warning('没有可下载的内容');
@@ -160,23 +220,113 @@ const ContentParsing = () => {
     }
     
     try {
-      let filename;
-      let url;
+      setDownloadProgress(0);
+      setDownloadStatus('downloading');
+      message.info('开始下载全部内容...');
       
-      if (parsedResult.media_type === 'video') {
-        // Download video
-        filename = `${parsedResult.title || '小红书视频'}.mp4`;
-        url = parsedResult.media_url;
-      } else {
-        // Download main image
-        filename = `${parsedResult.title || '小红书图片'}.jpg`;
-        url = parsedResult.media_url;
+      // Create JSZip instance
+      const zip = new JSZip();
+      
+      // Sanitize folder name
+      let folderName = (parsedResult.title || 'xiaohongshu_content')
+        .trim()
+        .replace(/[<>:"/\\|?*]/g, '_')
+        .replace(/^\./, 'content_'); // Handle hidden files
+      
+      if (!folderName || folderName === '_') {
+        folderName = 'xiaohongshu_content';
       }
       
-      await downloadFile(url, filename);
+      // Collect all files to download
+      const filesToDownload = [];
+      
+      // Add all images
+      if (parsedResult.all_images && parsedResult.all_images.length > 0) {
+        parsedResult.all_images.forEach((imgUrl, index) => {
+          filesToDownload.push({
+            name: `${folderName}/image_${String(index + 1).padStart(2, '0')}.jpg`,
+            url: imgUrl,
+            type: 'image'
+          });
+        });
+      }
+      
+      // Add main media if it's different from images (for video content)
+      if (parsedResult.media_type === 'video' && parsedResult.media_url) {
+        filesToDownload.push({
+          name: `${folderName}/main_video.mp4`,
+          url: parsedResult.media_url,
+          type: 'video'
+        });
+      }
+      
+      // Create info file
+      const infoContent = {
+        title: parsedResult.title,
+        author: parsedResult.author,
+        platform: parsedResult.platform,
+        content_id: parsedResult.content_id,
+        media_type: parsedResult.media_type,
+        source_url: parsedResult.source_url,
+        download_date: new Date().toISOString(),
+        total_files: filesToDownload.length
+      };
+      
+      zip.file(`${folderName}/info.json`, JSON.stringify(infoContent, null, 2));
+      
+      // Download all files
+      let successCount = 0;
+      for (let i = 0; i < filesToDownload.length; i++) {
+        const file = filesToDownload[i];
+        try {
+          const progress = Math.round(((i + 1) / filesToDownload.length) * 90);
+          setDownloadProgress(progress);
+          
+          const blob = await fetchFileBlob(file.url);
+          zip.file(file.name, blob);
+          successCount++;
+          
+        } catch (error) {
+          console.error(`Failed to download ${file.name}:`, error);
+          message.warning(`文件 ${file.name} 下载失败，将跳过`);
+        }
+      }
+      
+      // Generate and download zip
+      setDownloadProgress(95);
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      
+      setDownloadProgress(100);
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${folderName}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 1000);
+      
+      setDownloadStatus('completed');
+      message.success(`下载完成！成功下载 ${successCount}/${filesToDownload.length} 个文件`);
+      
+      setTimeout(() => {
+        setDownloadProgress(null);
+        setDownloadStatus(null);
+      }, 3000);
+      
     } catch (error) {
       console.error('Download error:', error);
-      message.error(`下载失败: ${error.message}`);
+      setDownloadStatus('failed');
+      message.error(`下载失败: ${error.message || '未知错误'}`);
+      
+      setTimeout(() => {
+        setDownloadProgress(null);
+        setDownloadStatus(null);
+      }, 3000);
     }
   };
 
@@ -186,10 +336,22 @@ const ContentParsing = () => {
       setProcessingStatus('processing');
       setProgress(10);
       setParsedResult(null);
-      console.log('Parse link:', values.link);
+      let link = values.link;
+      console.log('Original parse link:', link);
+      
+      // Extract URL from text if it contains more than just a URL
+      const urlRegex = /https?:\/\/[^\s)\]]+/g;
+      const extractedUrls = link.match(urlRegex);
+      if (extractedUrls && extractedUrls.length > 0) {
+        link = extractedUrls[0];
+        console.log('Extracted URL:', link);
+      }
+      
+      // Check if it's a Xiaohongshu URL
+      const isXiaohongshuUrl = link.includes('xiaohongshu.com') || link.includes('xhslink.com');
       
       // Call backend API to parse the link
-      const result = await apiService.content.parse({ link: values.link });
+      const result = await apiService.content.parse({ link });
       
       setProgress(50);
       
@@ -197,7 +359,7 @@ const ContentParsing = () => {
       const parsedData = {
         title: result.title || result.data?.title || '未知标题',
         author: result.author || result.data?.author || '未知作者',
-        platform: result.platform || result.data?.platform || '未知平台',
+        platform: result.platform || result.data?.platform || (isXiaohongshuUrl ? 'xiaohongshu' : '未知平台'),
         cover_url: result.cover_url || result.data?.cover_url || 'https://via.placeholder.com/300x200',
         media_type: result.media_type || result.data?.media_type || 'image',
         media_url: result.media_url || result.data?.media_url || 'https://via.placeholder.com/800x600',
@@ -208,6 +370,24 @@ const ContentParsing = () => {
       setProgress(100);
       setParsedResult(parsedData);
       message.success('解析成功！');
+      
+      // Automatically save to database and local file system after successful parsing
+      try {
+        console.log('开始自动保存到内容库...');
+        
+        // Call backend API to save content (this will save to both database and local files)
+        await apiService.content.save({
+          link: link, // Original link for parsing and downloading
+          source_type: 1, // 1-单链接解析
+          task_id: null
+        });
+        
+        message.success('内容已自动保存到数据库和本地文件系统');
+        console.log('自动保存成功');
+      } catch (saveError) {
+        console.error('Auto save error:', saveError);
+        message.warning(`自动保存失败：${saveError.message}，但解析成功`);
+      }
       
       setProcessingStatus('completed');
       form.resetFields();
@@ -241,6 +421,30 @@ const ContentParsing = () => {
             <Input 
               placeholder="请输入抖音、小红书等平台作品链接"
               style={{ fontSize: 16, padding: '8px 16px' }}
+              allowClear
+              suffix={
+                <Button 
+                  type="text" 
+                  icon={<FileTextOutlined />} 
+                  onClick={async () => {
+                    try {
+                      const text = await navigator.clipboard.readText();
+                      if (text) {
+                        form.setFieldsValue({ link: text });
+                        message.success('已从剪贴板粘贴内容');
+                      } else {
+                        message.warning('剪贴板内容为空');
+                      }
+                    } catch (error) {
+                      console.error('剪贴板读取失败:', error);
+                      message.error('无法访问剪贴板，请手动粘贴');
+                    }
+                  }}
+                  style={{ color: '#1890ff', margin: 0, padding: '0 8px' }}
+                  title="粘贴剪贴板内容"
+                  size="small"
+                />
+              }
             />
           </Form.Item>
           <Form.Item>
@@ -303,27 +507,18 @@ const ContentParsing = () => {
                   <p>作者：{parsedResult.author}</p>
                   <p>平台：{parsedResult.platform}</p>
                   <p>类型：{parsedResult.media_type === 'video' ? '视频' : '图片'}</p>
-                  <p>文件大小：{parsedResult.file_size}</p>
                   {parsedResult.all_images && parsedResult.all_images.length > 0 && (
                     <p>图片数量：{parsedResult.all_images.length} 张</p>
                   )}
                   <Space size="middle" style={{ marginTop: 16 }}>
-                    <Button type="primary" onClick={handleSaveToLibrary}>保存到内容库</Button>
                     <Button 
                       type="primary" 
                       icon={<DownloadOutlined />} 
                       onClick={handleDownload}
+                      loading={downloadStatus === 'downloading'}
                     >
-                      下载当前文件
+                      下载全部 ({parsedResult.all_images ? parsedResult.all_images.length : 1}个文件)
                     </Button>
-                    {parsedResult.all_images && parsedResult.all_images.length > 1 && (
-                      <Button 
-                        icon={<DownloadOutlined />} 
-                        onClick={handleDownloadAllImages}
-                      >
-                        下载全部图片 ({parsedResult.all_images.length})
-                      </Button>
-                    )}
                   </Space>
                 </div>
               </div>
@@ -348,8 +543,8 @@ const ContentParsing = () => {
                 </div>
               )}
               
-              {/* Preview all images if available */}
-              {parsedResult.all_images && parsedResult.all_images.length > 0 && (
+              {/* Preview all images if available and media type is image */}
+              {parsedResult.media_type === 'image' && parsedResult.all_images && parsedResult.all_images.length > 0 && (
                 <div style={{ marginTop: 20, width: '100%' }}>
                   <h4>图片预览</h4>
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', overflowX: 'auto', padding: 10, backgroundColor: '#f5f5f5', borderRadius: 8 }}>
@@ -359,7 +554,7 @@ const ContentParsing = () => {
                           src={getProxyImageUrl(imgUrl)} 
                           alt={`图片 ${index + 1}`} 
                           style={{ width: 150, height: 150, objectFit: 'cover', borderRadius: 4, cursor: 'pointer' }} 
-                          onClick={() => window.open(imgUrl, '_blank')}
+                          onClick={() => handlePreview(imgUrl, index)}
                           onError={handleImageError}
                         />
                         <div style={{ textAlign: 'center', marginTop: 5, fontSize: 12, color: '#666' }}>
@@ -368,17 +563,127 @@ const ContentParsing = () => {
                       </div>
                     ))}
                     {parsedResult.all_images.length > 5 && (
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 150, height: 150, backgroundColor: '#e8e8e8', borderRadius: 4 }}>
-                        <span style={{ fontSize: 14, color: '#666' }}>... 还有 {parsedResult.all_images.length - 5} 张图片</span>
+                      <div 
+                        style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center', 
+                          width: 150, 
+                          height: 150, 
+                          backgroundColor: '#e8e8e8', 
+                          borderRadius: 4,
+                          cursor: 'pointer',
+                          flexDirection: 'column'
+                        }}
+                        onClick={() => {
+                          // Show all images in a grid modal
+                          Modal.info({
+                            title: `所有图片 (${parsedResult.all_images.length}张)`,
+                            width: '90%',
+                            content: (
+                              <div style={{ 
+                                display: 'grid', 
+                                gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', 
+                                gap: 10, 
+                                marginTop: 20 
+                              }}>
+                                {parsedResult.all_images.map((imgUrl, index) => (
+                                  <div key={index} style={{ textAlign: 'center' }}>
+                                    <img 
+                                      src={getProxyImageUrl(imgUrl)} 
+                                      alt={`图片 ${index + 1}`} 
+                                      style={{ 
+                                        width: '100%', 
+                                        height: 150, 
+                                        objectFit: 'cover', 
+                                        borderRadius: 4, 
+                                        cursor: 'pointer' 
+                                      }} 
+                                      onClick={() => handlePreview(imgUrl, index)}
+                                      onError={handleImageError}
+                                    />
+                                    <div style={{ fontSize: 12, color: '#666', marginTop: 5 }}>
+                                      图片 {index + 1}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ),
+                            okText: '关闭'
+                          });
+                        }}
+                      >
+                        <EyeOutlined style={{ fontSize: 24, color: '#666', marginBottom: 8 }} />
+                        <span style={{ fontSize: 14, color: '#666' }}>查看全部</span>
+                        <span style={{ fontSize: 12, color: '#999' }}>({parsedResult.all_images.length}张)</span>
                       </div>
                     )}
                   </div>
+                </div>
+              )}
+              
+              {/* Video preview if media type is video */}
+              {parsedResult.media_type === 'video' && (
+                <div style={{ marginTop: 20, width: '100%' }}>
+                  <h4>视频预览</h4>
+                  <div style={{ display: 'flex', justifyContent: 'center', backgroundColor: '#f5f5f5', borderRadius: 8, padding: 20 }}>
+                    <video 
+                      src={getProxyVideoUrl(parsedResult.media_url || (parsedResult.file_path ? `/media/${parsedResult.file_path}` : ''))} 
+                      controls 
+                      style={{ maxWidth: '100%', maxHeight: '400px', borderRadius: 4 }} 
+                      onError={(e) => {
+                        console.error('Video load error:', e);
+                        message.error('视频加载失败，请检查网络或稍后重试');
+                      }}
+                    />
+                  </div>
+                  {!parsedResult.media_url && (
+                    <div style={{ textAlign: 'center', marginTop: 10, color: '#ff4d4f' }}>
+                      视频URL为空，无法加载视频
+                    </div>
+                  )}
                 </div>
               )}
             </Space>
           )}
         </Card>
       )}
+      
+      {/* Image Preview Modal */}
+      <Modal
+        open={previewVisible}
+        title={
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>{previewTitle}</span>
+            <Button 
+              type="link" 
+              icon={<DownloadOutlined />}
+              onClick={() => {
+                // Extract original URL from proxy URL
+                const urlMatch = previewImage.match(/url=([^&]+)/);
+                if (urlMatch) {
+                  const originalUrl = decodeURIComponent(urlMatch[1]);
+                  window.open(originalUrl, '_blank');
+                }
+              }}
+            >
+              查看原图
+            </Button>
+          </div>
+        }
+        footer={null}
+        onCancel={handlePreviewCancel}
+        width="80%"
+        style={{ top: 20 }}
+        bodyStyle={{ padding: 0, textAlign: 'center', backgroundColor: '#f5f5f5' }}
+      >
+        <Image
+          src={previewImage}
+          alt={previewTitle}
+          style={{ maxWidth: '100%', maxHeight: '80vh' }}
+          preview={false}
+        />
+      </Modal>
     </Space>
   );
 };

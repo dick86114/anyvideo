@@ -17,16 +17,53 @@ class ContentController {
         return res.status(400).json({ message: '请提供作品链接' });
       }
       
-      // Parse link and save to database
-      const content = await ParseService.parseLink(link);
+      // Parse link only - no media download
+      const parsedData = await ParseService.parseLink(link);
       
+      // Detect platform from link
+      const platform = ParseService.detectPlatform(link);
+      if (!platform) {
+        return res.status(400).json({ message: '不支持的平台链接' });
+      }
+      
+      // Return the full parsed result including media_url and all_images
+      // This is what the frontend expects - directly return parsedData
       res.status(201).json({
         message: '解析成功',
-        data: content
+        title: parsedData.title,
+        author: parsedData.author,
+        platform,
+        content_id: parsedData.content_id,
+        description: parsedData.description || '',
+        media_type: parsedData.media_type,
+        cover_url: parsedData.cover_url,
+        media_url: parsedData.media_url, // Ensure media_url is included
+        all_images: parsedData.all_images, // Ensure all_images is included
+        source_url: link,
+        source_type: 1, // 1-单链接解析
+        created_at: new Date()
       });
     } catch (error) {
       console.error('Parse content error:', error);
-      res.status(500).json({ message: error.message || '解析失败' });
+      
+      // Provide more detailed error messages based on error type
+      let errorMessage = '解析失败';
+      if (error.message) {
+        errorMessage = `解析失败: ${error.message}`;
+      } else if (error.code) {
+        errorMessage = `解析失败 (错误代码: ${error.code})`;
+      }
+      
+      // Handle specific error types
+      if (error.code === 'ECONNREFUSED') {
+        errorMessage = '解析失败: 网络连接被拒绝，请检查网络连接';
+      } else if (error.code === 'ETIMEDOUT') {
+        errorMessage = '解析失败: 请求超时，请稍后重试';
+      } else if (error.code === '23505') {
+        errorMessage = '解析失败: 内容已存在';
+      }
+      
+      res.status(500).json({ message: errorMessage });
     }
   }
 
@@ -433,9 +470,15 @@ class ContentController {
           responseType: 'stream',
           maxRedirects: 5, // Follow up to 5 redirects
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Referer': referer,
-            'Accept': 'image/*,video/*' // Only accept media types
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Referer': 'https://www.xiaohongshu.com/',
+            'Accept': 'image/webp,image/apng,image/svg+xml,image/*,video/*,*/*;q=0.8',
+            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Sec-Fetch-Dest': 'image',
+            'Sec-Fetch-Mode': 'no-cors',
+            'Sec-Fetch-Site': 'cross-site'
           }
         }),
         timeoutPromise
@@ -448,7 +491,7 @@ class ContentController {
       console.log('ProxyDownload: Content-Type:', contentType);
       
       // Check if content type is a supported media type
-      if (!this.isSupportedMediaType(contentType)) {
+      if (!ContentController.isSupportedMediaType(contentType)) {
         console.error('ProxyDownload: Unsupported media type:', contentType, 'for URL:', url);
         return res.status(400).json({ message: '不支持的媒体类型' });
       }
@@ -464,9 +507,18 @@ class ContentController {
       // Set filename if not provided
       const downloadFilename = filename || `download_${Date.now()}${ext}`;
       
-      // Set response headers for download
+      // Set response headers
       res.setHeader('Content-Type', contentType);
-      res.setHeader('Content-Disposition', `attachment; filename=${encodeURIComponent(downloadFilename)}`);
+      
+      // Only set Content-Disposition as attachment if not requested inline
+      const isInline = req.query.inline === 'true';
+      if (!isInline) {
+        res.setHeader('Content-Disposition', `attachment; filename=${encodeURIComponent(downloadFilename)}`);
+      } else {
+        // For inline requests (like when fetching content for ZIP creation), don't set attachment
+        res.setHeader('Content-Disposition', `inline; filename=${encodeURIComponent(downloadFilename)}`);
+      }
+      
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Access-Control-Allow-Origin', '*');
       
@@ -541,9 +593,15 @@ class ContentController {
           responseType: 'stream',
           maxRedirects: 5, // Follow up to 5 redirects
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Referer': referer,
-            'Accept': 'image/*' // Only accept image types
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Referer': 'https://www.xiaohongshu.com/',
+            'Accept': 'image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Sec-Fetch-Dest': 'image',
+            'Sec-Fetch-Mode': 'no-cors',
+            'Sec-Fetch-Site': 'cross-site'
           }
         }),
         timeoutPromise
@@ -556,7 +614,7 @@ class ContentController {
       console.log('ProxyImage: Content-Type:', contentType);
       
       // Check if content type is a supported image type
-      if (!this.isSupportedMediaType(contentType) || !contentType.startsWith('image/')) {
+      if (!ContentController.isSupportedMediaType(contentType) || !contentType.startsWith('image/')) {
         console.error('ProxyImage: Unsupported image type:', contentType, 'for URL:', url);
         // Return placeholder SVG for unsupported image type
         const svgPlaceholder = `<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150"><rect width="150" height="150" fill="#f0f0f0"/><text x="75" y="70" font-size="12" text-anchor="middle" fill="#666">不支持的图片类型</text><text x="75" y="90" font-size="10" text-anchor="middle" fill="#999">${contentType}</text></svg>`;

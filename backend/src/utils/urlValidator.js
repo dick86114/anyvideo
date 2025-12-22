@@ -8,7 +8,7 @@
  * @param {string} url - The URL to validate
  * @returns {boolean} - True if the URL is valid, false otherwise
  */
-export const isValidUrl = (url) => {
+const isValidUrl = (url) => {
   if (!url || typeof url !== 'string') {
     return false;
   }
@@ -26,7 +26,7 @@ export const isValidUrl = (url) => {
  * @param {string} url - The URL to validate
  * @returns {boolean} - True if the URL is an image URL, false otherwise
  */
-export const isValidImageUrl = (url) => {
+const isValidImageUrl = (url) => {
   if (!isValidUrl(url)) {
     return false;
   }
@@ -52,7 +52,7 @@ export const isValidImageUrl = (url) => {
  * @param {string} defaultProtocol - Default protocol to use (default: https)
  * @returns {string|null} - Normalized URL or null if invalid
  */
-export const normalizeUrl = (url, defaultProtocol = 'https') => {
+const normalizeUrl = (url, defaultProtocol = 'https') => {
   if (!url || typeof url !== 'string') {
     return null;
   }
@@ -89,7 +89,7 @@ export const normalizeUrl = (url, defaultProtocol = 'https') => {
  * @param {Array<string>} urls - Array of URLs to filter and normalize
  * @returns {Array<string>} - Array of valid, normalized image URLs
  */
-export const filterAndNormalizeImageUrls = (urls) => {
+const filterAndNormalizeImageUrls = (urls) => {
   if (!Array.isArray(urls)) {
     return [];
   }
@@ -98,5 +98,14 @@ export const filterAndNormalizeImageUrls = (urls) => {
     .map(url => normalizeUrl(url))
     .filter(url => url && isValidImageUrl(url));
 };
+
+// Export functions using CommonJS syntax
+module.exports = {
+  isValidUrl,
+  isValidImageUrl,
+  normalizeUrl,
+  filterAndNormalizeImageUrls
+};
+
 
 

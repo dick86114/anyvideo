@@ -34,7 +34,14 @@ const ContentManagement = () => {
       dataIndex: 'cover_url',
       key: 'cover_url',
       render: (cover_url) => (
-        <img src={cover_url} alt="封面" style={{ width: 80, height: 60, objectFit: 'cover', borderRadius: 4 }} />
+        <img 
+          src={`/api/v1/content/proxy-image?url=${encodeURIComponent(cover_url)}`} 
+          alt="封面" 
+          style={{ width: 80, height: 60, objectFit: 'cover', borderRadius: 4 }}
+          onError={(e) => {
+            e.target.src = 'https://via.placeholder.com/80x60?text=加载失败';
+          }}
+        />
       )
     },
     {
@@ -94,7 +101,7 @@ const ContentManagement = () => {
             type="link" 
             danger 
             icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record._id)}
+            onClick={() => handleDelete(record.id)}
           >
             删除
           </Button>
@@ -141,7 +148,7 @@ const ContentManagement = () => {
       console.error('Get content list error:', error);
       // Use mock data as fallback without showing error message to user
       setContentList(Array.from({ length: pagination.pageSize }, (_, i) => ({
-        _id: `mock-${pagination.current}-${i}`,
+        id: `mock-${pagination.current}-${i}`,
         cover_url: 'https://picsum.photos/id/237/200/150',
         title: `模拟内容标题 ${pagination.current}-${i}`,
         author: `模拟作者 ${i}`,
@@ -238,7 +245,7 @@ const ContentManagement = () => {
   // Handle content download
   const handleDownload = async (record) => {
     try {
-      const response = await apiService.content.download(record._id);
+      const response = await apiService.content.download(record.id);
       // Create download link and trigger download
       const link = document.createElement('a');
       link.href = response.data.download_url;
@@ -357,7 +364,7 @@ const ContentManagement = () => {
           <Table 
             dataSource={contentList} 
             columns={columns} 
-            rowKey="_id"
+            rowKey="id"
             pagination={{
               current: pagination.current,
               pageSize: pagination.pageSize,
@@ -384,15 +391,16 @@ const ContentManagement = () => {
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
           {previewContent.media_type === 'video' ? (
             <video 
-              src={previewContent.file_path ? `/media/${previewContent.file_path}` : previewContent.media_url} 
+              src={previewContent.file_path ? `/media/${previewContent.file_path}` : `/api/v1/content/proxy-download?url=${encodeURIComponent(previewContent.media_url || previewContent.cover_url)}`} 
               controls 
               style={{ width: '100%', maxHeight: '400px' }}
             />
           ) : (
             <Image
-              src={previewContent.cover_url || (previewContent.file_path ? `/media/${previewContent.file_path}` : '')}
+              src={`/api/v1/content/proxy-image?url=${encodeURIComponent(previewContent.cover_url)}`}
               alt={previewContent.title}
               style={{ maxWidth: '100%', maxHeight: '400px' }}
+              fallback="https://via.placeholder.com/400x300?text=图片加载失败"
             />
           )}
             <div style={{ marginBottom: '16px' }}>

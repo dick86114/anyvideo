@@ -1,0 +1,564 @@
+2025-12-22 00:04:58 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:04:58 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:04:59 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:04:59 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:04:59 [main] INFO  com.flower.parser.test.ParserTest - 测试微博解析功能...
+2025-12-22 00:04:59 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://weibo.com/1234567890/O8DM0BLLm
+2025-12-22 00:04:59 [main] INFO  com.flower.parser.ParserManager - 检测到微博平台，开始解析
+2025-12-22 00:04:59 [main] ERROR c.f.parser.executor.WeiboExecutor - weibo cookie未设置  当前不执行解析
+2025-12-22 00:04:59 [main] INFO  com.flower.parser.ParserManager - 解析结束~
+2025-12-22 00:04:59 [main] INFO  com.flower.parser.test.ParserTest - 微博解析测试完成
+2025-12-22 00:04:59 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:04:59 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:04:59 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:04:59 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:04:59 [main] INFO  com.flower.parser.test.ParserTest - 测试小红书解析功能...
+2025-12-22 00:04:59 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://www.xiaohongshu.com/explore/6682c4b8000000000a03a78e
+2025-12-22 00:04:59 [main] INFO  com.flower.parser.ParserManager - 检测到小红书平台，开始解析
+2025-12-22 00:04:59 [main] INFO  c.f.parser.executor.HongShuExecutor - 开始处理小红书URL: https://www.xiaohongshu.com/explore/6682c4b8000000000a03a78e
+2025-12-22 00:04:59 [main] INFO  c.f.parser.executor.HongShuExecutor - 发送HTTP请求获取页面内容
+2025-12-22 00:05:00 [main] INFO  c.f.parser.executor.HongShuExecutor - 成功获取页面内容，长度: 337212
+2025-12-22 00:05:00 [main] WARN  c.f.parser.executor.HongShuExecutor - JSON解析失败，尝试下一个模式: offset 19, character , line 1, column 19, fastjson-version 2.0.51 {"prevRouteData":{}
+2025-12-22 00:05:00 [main] INFO  c.f.parser.executor.HongShuExecutor - JSON数据提取失败，使用HTML解析
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.test.ParserTest - 测试解析管理器初始化...
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.test.ParserTest - 解析管理器初始化测试完成
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.test.ParserTest - 测试快手解析功能...
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://www.kuaishou.com/f/XsdfGhIjKlMn
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.ParserManager - 检测到快手平台，开始解析
+2025-12-22 00:05:00 [main] INFO  c.f.parser.executor.KuaishouExecutor - 开始处理快手URL: https://www.kuaishou.com/f/XsdfGhIjKlMn
+2025-12-22 00:05:00 [main] ERROR c.f.parser.executor.KuaishouExecutor - 快手URL ID解析错误
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.ParserManager - 解析结束~
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.test.ParserTest - 快手解析测试完成
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.test.ParserTest - 测试平台检测功能...
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.test.ParserTest - 小红书URL检测结果: 小红书
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.test.ParserTest - 微博URL检测结果: 微博
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.test.ParserTest - 抖音URL检测结果: 抖音
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.test.ParserTest - 平台检测功能测试完成
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.test.ParserTest - 测试短链接处理功能...
+2025-12-22 00:05:00 [main] INFO  com.flower.parser.test.ParserTest - 长链接处理结果: https://www.xiaohongshu.com/explore/6682c4b8000000000a03a78e
+2025-12-22 00:05:01 [main] INFO  com.flower.parser.utils.HttpUtil - 短链接重定向结果(尝试1): 原始URL=https://xhslink.com/abc123, 最终URL=https://xhslink.com/abc123, 响应状态码=500
+2025-12-22 00:05:02 [main] INFO  com.flower.parser.utils.HttpUtil - 短链接重定向结果(尝试2): 原始URL=https://xhslink.com/abc123, 最终URL=https://xhslink.com/abc123, 响应状态码=500
+2025-12-22 00:05:04 [main] INFO  com.flower.parser.utils.HttpUtil - 短链接重定向结果(尝试3): 原始URL=https://xhslink.com/abc123, 最终URL=https://xhslink.com/abc123, 响应状态码=500
+2025-12-22 00:05:04 [main] ERROR com.flower.parser.utils.HttpUtil - 所有重试都失败了，无法处理短链接: https://xhslink.com/abc123
+2025-12-22 00:05:04 [main] INFO  com.flower.parser.test.ParserTest - 短链接处理结果: https://xhslink.com/abc123
+2025-12-22 00:05:04 [main] INFO  com.flower.parser.test.ParserTest - 短链接处理功能测试完成
+2025-12-22 00:05:04 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:05:04 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:05:04 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:05:04 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:05:04 [main] INFO  com.flower.parser.test.ParserTest - 测试抖音解析功能...
+2025-12-22 00:05:04 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://www.douyin.com/video/7345678901234567890
+2025-12-22 00:05:04 [main] INFO  com.flower.parser.ParserManager - 检测到抖音平台，开始解析
+2025-12-22 00:05:04 [main] INFO  c.f.parser.executor.DouYinExecutor - 开始处理抖音URL: https://www.douyin.com/video/7345678901234567890
+2025-12-22 00:05:05 [main] INFO  c.f.parser.executor.DouYinExecutor - 成功获取抖音页面内容，长度: 72914
+2025-12-22 00:05:05 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:05:05 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:05:05 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:05:05 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:05:05 [main] INFO  com.flower.parser.test.ParserTest - 测试B站解析功能...
+2025-12-22 00:05:05 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://www.bilibili.com/video/BV1Xx411Z7xx
+2025-12-22 00:05:05 [main] INFO  com.flower.parser.ParserManager - 检测到B站平台，开始解析
+2025-12-22 00:05:05 [main] INFO  c.f.parser.executor.BilibiliExecutor - 开始处理B站URL: https://www.bilibili.com/video/BV1Xx411Z7xx
+2025-12-22 00:05:06 [main] INFO  c.f.parser.executor.BilibiliExecutor - 成功获取B站页面内容，长度: 165137
+2025-12-22 00:05:06 [main] INFO  c.f.parser.executor.BilibiliExecutor - 提取JSON字符串，长度: null
+2025-12-22 00:05:06 [main] WARN  c.f.parser.executor.BilibiliExecutor - 未提取到JSON数据，使用HTML解析
+2025-12-22 00:05:06 [main] INFO  c.f.parser.executor.BilibiliExecutor - 开始B站HTML解析
+2025-12-22 00:05:06 [main] INFO  c.f.parser.executor.BilibiliExecutor - HTML解析未找到视频URL
+2025-12-22 00:05:06 [main] INFO  c.f.parser.executor.BilibiliExecutor - B站HTML解析完成
+2025-12-22 00:05:06 [main] INFO  com.flower.parser.ParserManager - 解析结束~
+2025-12-22 00:05:06 [main] INFO  com.flower.parser.test.ParserTest - B站解析测试完成
+2025-12-22 00:05:06 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:05:06 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:05:06 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:05:06 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:05:06 [main] INFO  com.flower.parser.test.ParserTest - 测试无效URL处理...
+2025-12-22 00:05:06 [main] ERROR com.flower.parser.ParserManager - 无效的URL: 未提供URL
+2025-12-22 00:05:06 [main] ERROR com.flower.parser.ParserManager - 无效的URL: 未提供URL
+2025-12-22 00:05:06 [main] INFO  com.flower.parser.test.ParserTest - 无效URL处理测试完成
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 测试微博解析功能...
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://weibo.com/1234567890/O8DM0BLLm
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.ParserManager - 检测到微博平台，开始解析
+2025-12-22 00:06:31 [main] ERROR c.f.parser.executor.WeiboExecutor - weibo cookie未设置  当前不执行解析
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.ParserManager - 解析结束~
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 微博解析测试完成
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 测试小红书解析功能...
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://www.xiaohongshu.com/explore/6682c4b8000000000a03a78e
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.ParserManager - 检测到小红书平台，开始解析
+2025-12-22 00:06:31 [main] INFO  c.f.parser.executor.HongShuExecutor - 开始处理小红书URL: https://www.xiaohongshu.com/explore/6682c4b8000000000a03a78e
+2025-12-22 00:06:31 [main] INFO  c.f.parser.executor.HongShuExecutor - 发送HTTP请求获取页面内容
+2025-12-22 00:06:31 [main] INFO  c.f.parser.executor.HongShuExecutor - 成功获取页面内容，长度: 337211
+2025-12-22 00:06:31 [main] WARN  c.f.parser.executor.HongShuExecutor - JSON解析失败，尝试下一个模式: offset 19, character , line 1, column 19, fastjson-version 2.0.51 {"prevRouteData":{}
+2025-12-22 00:06:31 [main] INFO  c.f.parser.executor.HongShuExecutor - JSON数据提取失败，使用HTML解析
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 测试解析管理器初始化...
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 解析管理器初始化测试完成
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 测试快手解析功能...
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://www.kuaishou.com/f/XsdfGhIjKlMn
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.ParserManager - 检测到快手平台，开始解析
+2025-12-22 00:06:31 [main] INFO  c.f.parser.executor.KuaishouExecutor - 开始处理快手URL: https://www.kuaishou.com/f/XsdfGhIjKlMn
+2025-12-22 00:06:31 [main] ERROR c.f.parser.executor.KuaishouExecutor - 快手URL ID解析错误
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.ParserManager - 解析结束~
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 快手解析测试完成
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 测试平台检测功能...
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 小红书URL检测结果: 小红书
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 微博URL检测结果: 微博
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 抖音URL检测结果: 抖音
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 平台检测功能测试完成
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 测试短链接处理功能...
+2025-12-22 00:06:31 [main] INFO  com.flower.parser.test.ParserTest - 长链接处理结果: https://www.xiaohongshu.com/explore/6682c4b8000000000a03a78e
+2025-12-22 00:06:33 [main] INFO  com.flower.parser.utils.HttpUtil - 短链接重定向结果(尝试1): 原始URL=https://xhslink.com/abc123, 最终URL=https://xhslink.com/abc123, 响应状态码=500
+2025-12-22 00:06:34 [main] INFO  com.flower.parser.utils.HttpUtil - 短链接重定向结果(尝试2): 原始URL=https://xhslink.com/abc123, 最终URL=https://xhslink.com/abc123, 响应状态码=500
+2025-12-22 00:06:37 [main] INFO  com.flower.parser.utils.HttpUtil - 短链接重定向结果(尝试3): 原始URL=https://xhslink.com/abc123, 最终URL=https://xhslink.com/abc123, 响应状态码=500
+2025-12-22 00:06:37 [main] ERROR com.flower.parser.utils.HttpUtil - 所有重试都失败了，无法处理短链接: https://xhslink.com/abc123
+2025-12-22 00:06:37 [main] INFO  com.flower.parser.test.ParserTest - 短链接处理结果: https://xhslink.com/abc123
+2025-12-22 00:06:37 [main] INFO  com.flower.parser.test.ParserTest - 短链接处理功能测试完成
+2025-12-22 00:06:37 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:06:37 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:06:37 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:06:37 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:06:37 [main] INFO  com.flower.parser.test.ParserTest - 测试抖音解析功能...
+2025-12-22 00:06:37 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://www.douyin.com/video/7345678901234567890
+2025-12-22 00:06:37 [main] INFO  com.flower.parser.ParserManager - 检测到抖音平台，开始解析
+2025-12-22 00:06:37 [main] INFO  c.f.parser.executor.DouYinExecutor - 开始处理抖音URL: https://www.douyin.com/video/7345678901234567890
+2025-12-22 00:06:37 [main] INFO  c.f.parser.executor.DouYinExecutor - 成功获取抖音页面内容，长度: 72914
+2025-12-22 00:06:37 [main] INFO  c.f.parser.executor.DouYinExecutor - 提取JSON字符串，长度: null
+2025-12-22 00:06:37 [main] WARN  c.f.parser.executor.DouYinExecutor - 未提取到JSON数据，使用HTML解析
+2025-12-22 00:06:37 [main] INFO  c.f.parser.executor.DouYinExecutor - 开始抖音HTML解析
+2025-12-22 00:06:37 [main] INFO  c.f.parser.executor.DouYinExecutor - HTML检测视频: false
+2025-12-22 00:06:37 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:06:37 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:06:37 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:06:37 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:06:37 [main] INFO  com.flower.parser.test.ParserTest - 测试B站解析功能...
+2025-12-22 00:06:37 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://www.bilibili.com/video/BV1Xx411Z7xx
+2025-12-22 00:06:37 [main] INFO  com.flower.parser.ParserManager - 检测到B站平台，开始解析
+2025-12-22 00:06:37 [main] INFO  c.f.parser.executor.BilibiliExecutor - 开始处理B站URL: https://www.bilibili.com/video/BV1Xx411Z7xx
+2025-12-22 00:06:37 [main] INFO  c.f.parser.executor.BilibiliExecutor - 成功获取B站页面内容，长度: 165699
+2025-12-22 00:06:37 [main] INFO  c.f.parser.executor.BilibiliExecutor - 提取JSON字符串，长度: null
+2025-12-22 00:06:37 [main] WARN  c.f.parser.executor.BilibiliExecutor - 未提取到JSON数据，使用HTML解析
+2025-12-22 00:06:37 [main] INFO  c.f.parser.executor.BilibiliExecutor - 开始B站HTML解析
+2025-12-22 00:06:38 [main] INFO  c.f.parser.executor.BilibiliExecutor - HTML解析未找到视频URL
+2025-12-22 00:06:38 [main] INFO  c.f.parser.executor.BilibiliExecutor - B站HTML解析完成
+2025-12-22 00:06:38 [main] INFO  com.flower.parser.ParserManager - 解析结束~
+2025-12-22 00:06:38 [main] INFO  com.flower.parser.test.ParserTest - B站解析测试完成
+2025-12-22 00:06:38 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:06:38 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:06:38 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:06:38 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:06:38 [main] INFO  com.flower.parser.test.ParserTest - 测试无效URL处理...
+2025-12-22 00:06:38 [main] ERROR com.flower.parser.ParserManager - 无效的URL: 未提供URL
+2025-12-22 00:06:38 [main] ERROR com.flower.parser.ParserManager - 无效的URL: 未提供URL
+2025-12-22 00:06:38 [main] INFO  com.flower.parser.test.ParserTest - 无效URL处理测试完成
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 测试微博解析功能...
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://weibo.com/1234567890/O8DM0BLLm
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.ParserManager - 检测到微博平台，开始解析
+2025-12-22 00:09:07 [main] ERROR c.f.parser.executor.WeiboExecutor - weibo cookie未设置  当前不执行解析
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.ParserManager - 解析结束~
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 微博解析测试完成
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 测试小红书解析功能...
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://www.xiaohongshu.com/explore/6682c4b8000000000a03a78e
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.ParserManager - 检测到小红书平台，开始解析
+2025-12-22 00:09:07 [main] INFO  c.f.parser.executor.HongShuExecutor - 开始处理小红书URL: https://www.xiaohongshu.com/explore/6682c4b8000000000a03a78e
+2025-12-22 00:09:07 [main] INFO  c.f.parser.executor.HongShuExecutor - 发送HTTP请求获取页面内容
+2025-12-22 00:09:07 [main] INFO  c.f.parser.executor.HongShuExecutor - 成功获取页面内容，长度: 337211
+2025-12-22 00:09:07 [main] WARN  c.f.parser.executor.HongShuExecutor - JSON解析失败，尝试下一个模式: offset 19, character , line 1, column 19, fastjson-version 2.0.51 {"prevRouteData":{}
+2025-12-22 00:09:07 [main] INFO  c.f.parser.executor.HongShuExecutor - JSON数据提取失败，使用HTML解析
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 测试解析管理器初始化...
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 解析管理器初始化测试完成
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 测试快手解析功能...
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://www.kuaishou.com/f/XsdfGhIjKlMn
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.ParserManager - 检测到快手平台，开始解析
+2025-12-22 00:09:07 [main] INFO  c.f.parser.executor.KuaishouExecutor - 开始处理快手URL: https://www.kuaishou.com/f/XsdfGhIjKlMn
+2025-12-22 00:09:07 [main] ERROR c.f.parser.executor.KuaishouExecutor - 快手URL ID解析错误
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.ParserManager - 解析结束~
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 快手解析测试完成
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 测试平台检测功能...
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 小红书URL检测结果: 小红书
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 微博URL检测结果: 微博
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 抖音URL检测结果: 抖音
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 平台检测功能测试完成
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 测试短链接处理功能...
+2025-12-22 00:09:07 [main] INFO  com.flower.parser.test.ParserTest - 长链接处理结果: https://www.xiaohongshu.com/explore/6682c4b8000000000a03a78e
+2025-12-22 00:09:08 [main] INFO  com.flower.parser.utils.HttpUtil - 短链接重定向结果(尝试1): 原始URL=https://xhslink.com/abc123, 最终URL=https://xhslink.com/abc123, 响应状态码=500
+2025-12-22 00:09:10 [main] INFO  com.flower.parser.utils.HttpUtil - 短链接重定向结果(尝试2): 原始URL=https://xhslink.com/abc123, 最终URL=https://xhslink.com/abc123, 响应状态码=500
+2025-12-22 00:09:13 [main] INFO  com.flower.parser.utils.HttpUtil - 短链接重定向结果(尝试3): 原始URL=https://xhslink.com/abc123, 最终URL=https://xhslink.com/abc123, 响应状态码=500
+2025-12-22 00:09:13 [main] ERROR com.flower.parser.utils.HttpUtil - 所有重试都失败了，无法处理短链接: https://xhslink.com/abc123
+2025-12-22 00:09:13 [main] INFO  com.flower.parser.test.ParserTest - 短链接处理结果: https://xhslink.com/abc123
+2025-12-22 00:09:13 [main] INFO  com.flower.parser.test.ParserTest - 短链接处理功能测试完成
+2025-12-22 00:09:13 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:09:13 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:09:13 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:09:13 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:09:13 [main] INFO  com.flower.parser.test.ParserTest - 测试抖音解析功能...
+2025-12-22 00:09:13 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://www.douyin.com/video/7345678901234567890
+2025-12-22 00:09:13 [main] INFO  com.flower.parser.ParserManager - 检测到抖音平台，开始解析
+2025-12-22 00:09:13 [main] INFO  c.f.parser.executor.DouYinExecutor - 开始处理抖音URL: https://www.douyin.com/video/7345678901234567890
+2025-12-22 00:09:13 [main] INFO  c.f.parser.executor.DouYinExecutor - 成功获取抖音页面内容，长度: 72914
+2025-12-22 00:09:13 [main] INFO  c.f.parser.executor.DouYinExecutor - 提取JSON字符串，长度: null
+2025-12-22 00:09:13 [main] WARN  c.f.parser.executor.DouYinExecutor - 未提取到JSON数据，使用HTML解析
+2025-12-22 00:09:13 [main] INFO  c.f.parser.executor.DouYinExecutor - 开始抖音HTML解析
+2025-12-22 00:09:13 [main] INFO  c.f.parser.executor.DouYinExecutor - HTML检测视频: false
+2025-12-22 00:09:13 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:09:13 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:09:13 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:09:13 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:09:13 [main] INFO  com.flower.parser.test.ParserTest - 测试B站解析功能...
+2025-12-22 00:09:13 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://www.bilibili.com/video/BV1Xx411Z7xx
+2025-12-22 00:09:13 [main] INFO  com.flower.parser.ParserManager - 检测到B站平台，开始解析
+2025-12-22 00:09:13 [main] INFO  c.f.parser.executor.BilibiliExecutor - 开始处理B站URL: https://www.bilibili.com/video/BV1Xx411Z7xx
+2025-12-22 00:09:13 [main] INFO  c.f.parser.executor.BilibiliExecutor - 成功获取B站页面内容，长度: 165666
+2025-12-22 00:09:13 [main] INFO  c.f.parser.executor.BilibiliExecutor - 提取JSON字符串，长度: null
+2025-12-22 00:09:13 [main] WARN  c.f.parser.executor.BilibiliExecutor - 未提取到JSON数据，使用HTML解析
+2025-12-22 00:09:13 [main] INFO  c.f.parser.executor.BilibiliExecutor - 开始B站HTML解析
+2025-12-22 00:09:14 [main] INFO  c.f.parser.executor.BilibiliExecutor - HTML解析未找到视频URL
+2025-12-22 00:09:14 [main] INFO  c.f.parser.executor.BilibiliExecutor - B站HTML解析完成
+2025-12-22 00:09:14 [main] INFO  com.flower.parser.ParserManager - 解析结束~
+2025-12-22 00:09:14 [main] INFO  com.flower.parser.test.ParserTest - B站解析测试完成
+2025-12-22 00:09:14 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:09:14 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:09:14 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:09:14 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:09:14 [main] INFO  com.flower.parser.test.ParserTest - 测试无效URL处理...
+2025-12-22 00:09:14 [main] ERROR com.flower.parser.ParserManager - 无效的URL: 未提供URL
+2025-12-22 00:09:14 [main] ERROR com.flower.parser.ParserManager - 无效的URL: 未提供URL
+2025-12-22 00:09:14 [main] INFO  com.flower.parser.test.ParserTest - 无效URL处理测试完成
+2025-12-22 00:10:11 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:10:11 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:10:11 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:10:11 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:10:11 [main] INFO  com.flower.parser.test.ParserTest - 测试微博解析功能...
+2025-12-22 00:10:11 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://weibo.com/1234567890/O8DM0BLLm
+2025-12-22 00:10:11 [main] INFO  com.flower.parser.ParserManager - 检测到微博平台，开始解析
+2025-12-22 00:10:11 [main] ERROR c.f.parser.executor.WeiboExecutor - weibo cookie未设置  当前不执行解析
+2025-12-22 00:10:11 [main] INFO  com.flower.parser.ParserManager - 解析结束~
+2025-12-22 00:10:11 [main] INFO  com.flower.parser.test.ParserTest - 微博解析测试完成
+2025-12-22 00:10:11 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:10:11 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:10:11 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:10:11 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:10:11 [main] INFO  com.flower.parser.test.ParserTest - 测试小红书解析功能...
+2025-12-22 00:10:11 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://www.xiaohongshu.com/explore/6682c4b8000000000a03a78e
+2025-12-22 00:10:11 [main] INFO  com.flower.parser.ParserManager - 检测到小红书平台，开始解析
+2025-12-22 00:10:11 [main] INFO  c.f.parser.executor.HongShuExecutor - 开始处理小红书URL: https://www.xiaohongshu.com/explore/6682c4b8000000000a03a78e
+2025-12-22 00:10:11 [main] INFO  c.f.parser.executor.HongShuExecutor - 发送HTTP请求获取页面内容
+2025-12-22 00:10:12 [main] INFO  c.f.parser.executor.HongShuExecutor - 成功获取页面内容，长度: 337211
+2025-12-22 00:10:12 [main] WARN  c.f.parser.executor.HongShuExecutor - JSON解析失败，尝试下一个模式: offset 19, character , line 1, column 19, fastjson-version 2.0.51 {"prevRouteData":{}
+2025-12-22 00:10:12 [main] INFO  c.f.parser.executor.HongShuExecutor - JSON数据提取失败，使用HTML解析
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.test.ParserTest - 测试解析管理器初始化...
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.test.ParserTest - 解析管理器初始化测试完成
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.test.ParserTest - 测试快手解析功能...
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://www.kuaishou.com/f/XsdfGhIjKlMn
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.ParserManager - 检测到快手平台，开始解析
+2025-12-22 00:10:12 [main] INFO  c.f.parser.executor.KuaishouExecutor - 开始处理快手URL: https://www.kuaishou.com/f/XsdfGhIjKlMn
+2025-12-22 00:10:12 [main] ERROR c.f.parser.executor.KuaishouExecutor - 快手URL ID解析错误
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.ParserManager - 解析结束~
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.test.ParserTest - 快手解析测试完成
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.test.ParserTest - 测试平台检测功能...
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.test.ParserTest - 小红书URL检测结果: 小红书
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.test.ParserTest - 微博URL检测结果: 微博
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.test.ParserTest - 抖音URL检测结果: 抖音
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.test.ParserTest - 平台检测功能测试完成
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.test.ParserTest - 测试短链接处理功能...
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.test.ParserTest - 长链接处理结果: https://www.xiaohongshu.com/explore/6682c4b8000000000a03a78e
+2025-12-22 00:10:12 [main] INFO  com.flower.parser.utils.HttpUtil - 短链接重定向结果(尝试1): 原始URL=https://xhslink.com/abc123, 最终URL=https://xhslink.com/abc123, 响应状态码=500
+2025-12-22 00:10:13 [main] INFO  com.flower.parser.utils.HttpUtil - 短链接重定向结果(尝试2): 原始URL=https://xhslink.com/abc123, 最终URL=https://xhslink.com/abc123, 响应状态码=500
+2025-12-22 00:10:15 [main] INFO  com.flower.parser.utils.HttpUtil - 短链接重定向结果(尝试3): 原始URL=https://xhslink.com/abc123, 最终URL=https://xhslink.com/abc123, 响应状态码=500
+2025-12-22 00:10:15 [main] ERROR com.flower.parser.utils.HttpUtil - 所有重试都失败了，无法处理短链接: https://xhslink.com/abc123
+2025-12-22 00:10:15 [main] INFO  com.flower.parser.test.ParserTest - 短链接处理结果: https://xhslink.com/abc123
+2025-12-22 00:10:15 [main] INFO  com.flower.parser.test.ParserTest - 短链接处理功能测试完成
+2025-12-22 00:10:15 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:10:15 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:10:15 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:10:15 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:10:15 [main] INFO  com.flower.parser.test.ParserTest - 测试抖音解析功能...
+2025-12-22 00:10:15 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://www.douyin.com/video/7345678901234567890
+2025-12-22 00:10:15 [main] INFO  com.flower.parser.ParserManager - 检测到抖音平台，开始解析
+2025-12-22 00:10:15 [main] INFO  c.f.parser.executor.DouYinExecutor - 开始处理抖音URL: https://www.douyin.com/video/7345678901234567890
+2025-12-22 00:10:16 [main] INFO  c.f.parser.executor.DouYinExecutor - 成功获取抖音页面内容，长度: 72914
+2025-12-22 00:10:16 [main] INFO  c.f.parser.executor.DouYinExecutor - 提取JSON字符串，长度: null
+2025-12-22 00:10:16 [main] WARN  c.f.parser.executor.DouYinExecutor - 未提取到JSON数据，使用HTML解析
+2025-12-22 00:10:16 [main] INFO  c.f.parser.executor.DouYinExecutor - 开始抖音HTML解析
+2025-12-22 00:10:16 [main] INFO  c.f.parser.executor.DouYinExecutor - HTML检测视频: false
+2025-12-22 00:10:16 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:10:16 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:10:16 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:10:16 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:10:16 [main] INFO  com.flower.parser.test.ParserTest - 测试B站解析功能...
+2025-12-22 00:10:16 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://www.bilibili.com/video/BV1Xx411Z7xx
+2025-12-22 00:10:16 [main] INFO  com.flower.parser.ParserManager - 检测到B站平台，开始解析
+2025-12-22 00:10:16 [main] INFO  c.f.parser.executor.BilibiliExecutor - 开始处理B站URL: https://www.bilibili.com/video/BV1Xx411Z7xx
+2025-12-22 00:10:16 [main] INFO  c.f.parser.executor.BilibiliExecutor - 成功获取B站页面内容，长度: 165580
+2025-12-22 00:10:16 [main] INFO  c.f.parser.executor.BilibiliExecutor - 提取JSON字符串，长度: null
+2025-12-22 00:10:16 [main] WARN  c.f.parser.executor.BilibiliExecutor - 未提取到JSON数据，使用HTML解析
+2025-12-22 00:10:16 [main] INFO  c.f.parser.executor.BilibiliExecutor - 开始B站HTML解析
+2025-12-22 00:10:16 [main] INFO  c.f.parser.executor.BilibiliExecutor - HTML解析未找到视频URL
+2025-12-22 00:10:16 [main] INFO  c.f.parser.executor.BilibiliExecutor - B站HTML解析完成
+2025-12-22 00:10:16 [main] INFO  com.flower.parser.ParserManager - 解析结束~
+2025-12-22 00:10:16 [main] INFO  com.flower.parser.test.ParserTest - B站解析测试完成
+2025-12-22 00:10:16 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 00:10:16 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 00:10:16 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 00:10:16 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 00:10:16 [main] INFO  com.flower.parser.test.ParserTest - 测试无效URL处理...
+2025-12-22 00:10:16 [main] ERROR com.flower.parser.ParserManager - 无效的URL: 未提供URL
+2025-12-22 00:10:16 [main] ERROR com.flower.parser.ParserManager - 无效的URL: 未提供URL
+2025-12-22 00:10:16 [main] INFO  com.flower.parser.test.ParserTest - 无效URL处理测试完成
+2025-12-22 09:31:26 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 09:31:26 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 09:31:26 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 09:31:26 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 09:31:26 [main] INFO  com.flower.parser.test.ParserTest - 测试微博解析功能...
+2025-12-22 09:31:26 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://weibo.com/1234567890/O8DM0BLLm
+2025-12-22 09:31:26 [main] INFO  com.flower.parser.ParserManager - 检测到微博平台，开始解析
+2025-12-22 09:31:26 [main] ERROR c.f.parser.executor.WeiboExecutor - weibo cookie未设置  当前不执行解析
+2025-12-22 09:31:26 [main] INFO  com.flower.parser.ParserManager - 解析结束~
+2025-12-22 09:31:26 [main] INFO  com.flower.parser.test.ParserTest - 微博解析测试完成
+2025-12-22 09:31:26 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 09:31:26 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 09:31:26 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 09:31:26 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 09:31:26 [main] INFO  com.flower.parser.test.ParserTest - 测试小红书解析功能...
+2025-12-22 09:31:26 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://www.xiaohongshu.com/explore/6682c4b8000000000a03a78e
+2025-12-22 09:31:26 [main] INFO  com.flower.parser.ParserManager - 检测到小红书平台，开始解析
+2025-12-22 09:31:26 [main] INFO  c.f.parser.executor.HongShuExecutor - 开始处理小红书URL: https://www.xiaohongshu.com/explore/6682c4b8000000000a03a78e
+2025-12-22 09:31:26 [main] INFO  c.f.parser.executor.HongShuExecutor - 发送HTTP请求获取页面内容
+2025-12-22 09:31:27 [main] INFO  c.f.parser.executor.HongShuExecutor - 成功获取页面内容，长度: 337211
+2025-12-22 09:31:27 [main] WARN  c.f.parser.executor.HongShuExecutor - JSON解析失败，尝试下一个模式: not allow unquoted fieldName, offset 2, character f, line 1, column 2, fastjson-version 2.0.51 {for(var r=1;r<arguments.length;r++){var t=null!=arguments[r]?arguments[r]:{}
+2025-12-22 09:31:27 [main] INFO  c.f.parser.executor.HongShuExecutor - JSON数据提取失败，使用HTML解析
+2025-12-22 09:31:27 [main] ERROR c.f.parser.executor.HongShuExecutor - 提取封面URL失败: Index 0 out of bounds for length 0
+java.lang.IndexOutOfBoundsException: Index 0 out of bounds for length 0
+	at java.base/jdk.internal.util.Preconditions.outOfBounds(Preconditions.java:100)
+	at java.base/jdk.internal.util.Preconditions.outOfBoundsCheckIndex(Preconditions.java:106)
+	at java.base/jdk.internal.util.Preconditions.checkIndex(Preconditions.java:302)
+	at java.base/java.util.Objects.checkIndex(Objects.java:365)
+	at java.base/java.util.ArrayList.get(ArrayList.java:428)
+	at com.flower.parser.executor.HongShuExecutor.extractCoverUrlFromHtml(HongShuExecutor.java:1013)
+	at com.flower.parser.executor.HongShuExecutor.extractContentFromHtml(HongShuExecutor.java:312)
+	at com.flower.parser.executor.HongShuExecutor.dataExecutor(HongShuExecutor.java:106)
+	at com.flower.parser.ParserManager.parseUrl(ParserManager.java:61)
+	at com.flower.parser.test.ParserTest.testHongShuParse(ParserTest.java:120)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:26)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:316)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeWithRerun(JUnit4Provider.java:240)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:214)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:155)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+2025-12-22 09:31:27 [main] INFO  c.f.parser.executor.HongShuExecutor - 内容解析结果: 标题='小红书内容', 作者='小红书作者', 类型=图文, 视频数量=0, 图片数量=0
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.ParserManager - 解析结束~
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.test.ParserTest - 小红书解析测试完成
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.test.ParserTest - 测试解析管理器初始化...
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.test.ParserTest - 解析管理器初始化测试完成
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.test.ParserTest - 测试快手解析功能...
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://www.kuaishou.com/f/XsdfGhIjKlMn
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.ParserManager - 检测到快手平台，开始解析
+2025-12-22 09:31:27 [main] INFO  c.f.parser.executor.KuaishouExecutor - 开始处理快手URL: https://www.kuaishou.com/f/XsdfGhIjKlMn
+2025-12-22 09:31:27 [main] ERROR c.f.parser.executor.KuaishouExecutor - 快手URL ID解析错误
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.ParserManager - 解析结束~
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.test.ParserTest - 快手解析测试完成
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.test.ParserTest - 测试平台检测功能...
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.test.ParserTest - 小红书URL检测结果: 小红书
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.test.ParserTest - 微博URL检测结果: 微博
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.test.ParserTest - 抖音URL检测结果: 抖音
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.test.ParserTest - 平台检测功能测试完成
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.test.ParserTest - 测试短链接处理功能...
+2025-12-22 09:31:27 [main] INFO  com.flower.parser.test.ParserTest - 长链接处理结果: https://www.xiaohongshu.com/explore/6682c4b8000000000a03a78e
+2025-12-22 09:31:28 [main] INFO  com.flower.parser.utils.HttpUtil - 短链接重定向结果(尝试1): 原始URL=https://xhslink.com/abc123, 最终URL=https://xhslink.com/abc123, 响应状态码=500
+2025-12-22 09:31:29 [main] INFO  com.flower.parser.utils.HttpUtil - 短链接重定向结果(尝试2): 原始URL=https://xhslink.com/abc123, 最终URL=https://xhslink.com/abc123, 响应状态码=404
+2025-12-22 09:31:32 [main] INFO  com.flower.parser.utils.HttpUtil - 短链接重定向结果(尝试3): 原始URL=https://xhslink.com/abc123, 最终URL=https://xhslink.com/abc123, 响应状态码=500
+2025-12-22 09:31:32 [main] ERROR com.flower.parser.utils.HttpUtil - 所有重试都失败了，无法处理短链接: https://xhslink.com/abc123
+2025-12-22 09:31:32 [main] INFO  com.flower.parser.test.ParserTest - 短链接处理结果: https://xhslink.com/abc123
+2025-12-22 09:31:32 [main] INFO  com.flower.parser.test.ParserTest - 短链接处理功能测试完成
+2025-12-22 09:31:32 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 09:31:32 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 09:31:32 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 09:31:32 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 09:31:32 [main] INFO  com.flower.parser.test.ParserTest - 测试抖音解析功能...
+2025-12-22 09:31:32 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://www.douyin.com/video/7345678901234567890
+2025-12-22 09:31:32 [main] INFO  com.flower.parser.ParserManager - 检测到抖音平台，开始解析
+2025-12-22 09:31:32 [main] INFO  c.f.parser.executor.DouYinExecutor - 开始处理抖音URL: 7345678901234567890
+2025-12-22 09:31:32 [main] ERROR com.flower.parser.test.ParserTest - 抖音解析测试异常: Expected URL scheme 'http' or 'https' but no scheme was found for 734567...
+java.lang.IllegalArgumentException: Expected URL scheme 'http' or 'https' but no scheme was found for 734567...
+	at okhttp3.HttpUrl$Builder.parse$okhttp(HttpUrl.kt:1261)
+	at okhttp3.HttpUrl$Companion.get(HttpUrl.kt:1634)
+	at okhttp3.Request$Builder.url(Request.kt:184)
+	at com.flower.parser.utils.HttpUtil.getPage(HttpUtil.java:129)
+	at com.flower.parser.executor.DouYinExecutor.ImageTextExecutor(DouYinExecutor.java:53)
+	at com.flower.parser.ParserManager.parseUrl(ParserManager.java:72)
+	at com.flower.parser.test.ParserTest.testDouYinParse(ParserTest.java:137)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:26)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:316)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeWithRerun(JUnit4Provider.java:240)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:214)
+	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:155)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+2025-12-22 09:31:32 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 09:31:32 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 09:31:32 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 09:31:32 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 09:31:32 [main] INFO  com.flower.parser.test.ParserTest - 测试B站解析功能...
+2025-12-22 09:31:32 [main] INFO  com.flower.parser.ParserManager - 解析开始~原地址: https://www.bilibili.com/video/BV1Xx411Z7xx
+2025-12-22 09:31:32 [main] INFO  com.flower.parser.ParserManager - 检测到B站平台，开始解析
+2025-12-22 09:31:32 [main] INFO  c.f.parser.executor.BilibiliExecutor - 开始处理B站URL: https://www.bilibili.com/video/BV1Xx411Z7xx
+2025-12-22 09:31:32 [main] INFO  c.f.parser.executor.BilibiliExecutor - 成功获取B站页面内容，长度: 168097
+2025-12-22 09:31:32 [main] INFO  c.f.parser.executor.BilibiliExecutor - 提取JSON字符串，长度: null
+2025-12-22 09:31:32 [main] WARN  c.f.parser.executor.BilibiliExecutor - 未提取到JSON数据，使用HTML解析
+2025-12-22 09:31:32 [main] INFO  c.f.parser.executor.BilibiliExecutor - 开始B站HTML解析
+2025-12-22 09:31:33 [main] INFO  c.f.parser.executor.BilibiliExecutor - HTML解析未找到视频URL
+2025-12-22 09:31:33 [main] INFO  c.f.parser.executor.BilibiliExecutor - B站HTML解析完成
+2025-12-22 09:31:33 [main] INFO  com.flower.parser.ParserManager - 解析结束~
+2025-12-22 09:31:33 [main] INFO  com.flower.parser.test.ParserTest - B站解析测试完成
+2025-12-22 09:31:33 [main] INFO  com.flower.parser.test.ParserTest - 初始化测试环境...
+2025-12-22 09:31:33 [main] INFO  com.flower.parser.ParserManager - 初始化解析管理器...
+2025-12-22 09:31:33 [main] INFO  com.flower.parser.ParserManager - 解析管理器初始化完成
+2025-12-22 09:31:33 [main] INFO  com.flower.parser.test.ParserTest - 测试环境初始化完成
+2025-12-22 09:31:33 [main] INFO  com.flower.parser.test.ParserTest - 测试无效URL处理...
+2025-12-22 09:31:33 [main] ERROR com.flower.parser.ParserManager - 无效的URL: 未提供URL
+2025-12-22 09:31:33 [main] ERROR com.flower.parser.ParserManager - 无效的URL: 未提供URL
+2025-12-22 09:31:33 [main] INFO  com.flower.parser.test.ParserTest - 无效URL处理测试完成

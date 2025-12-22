@@ -21,8 +21,8 @@ async function testMediaDownload() {
     const imageFilePath = await ParseService.downloadMedia(imageParsedData, 'test', 1);
     console.log('✓ Image download successful:', imageFilePath);
     
-    // Test case 2: Valid video URL - Using W3Schools which is more reliable
-    const testVideoUrl = 'https://www.w3schools.com/html/mov_bbb.mp4';
+    // Test case 2: Valid video URL
+    const testVideoUrl = 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4';
     console.log('\nTest 2: Downloading valid video from URL:', testVideoUrl);
     
     const videoParsedData = {

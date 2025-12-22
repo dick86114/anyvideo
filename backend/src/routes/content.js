@@ -9,6 +9,15 @@ const ContentController = require('../controllers/ContentController');
 // Parse content from link
 router.post('/parse', ContentController.parseContent);
 
+// Proxy download for external media files
+router.get('/proxy-download', ContentController.proxyDownload);
+
+// Proxy image for frontend display (bypass CORS)
+router.get('/proxy-image', ContentController.proxyImage);
+
+// Download exported Excel file
+router.get('/download-export', ContentController.downloadExport);
+
 // Get content list with pagination and filters
 router.get('/', ContentController.getContentList);
 
@@ -24,17 +33,8 @@ router.post('/batch-delete', ContentController.batchDeleteContents);
 // Batch export contents
 router.post('/export', ContentController.batchExportContents);
 
-// Download exported Excel file
-router.get('/download-export', ContentController.downloadExport);
-
 // Download single content file
 router.post('/download', ContentController.downloadContent);
-
-// Proxy download for external media files
-router.get('/proxy-download', ContentController.proxyDownload);
-
-// Proxy image for frontend display (bypass CORS)
-router.get('/proxy-image', ContentController.proxyImage);
 
 // Save content to both database and project root directory
 router.post('/save', ContentController.saveContent);
