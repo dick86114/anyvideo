@@ -507,101 +507,114 @@ const ContentManagement = () => {
       >
         {previewContent && (
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-          {previewContent.media_type === 'video' ? (
-            <div>
-              <h4>视频预览</h4>
-              {/* 主视频预览 */}
-              <video 
-                src={previewContent.file_path ? `/media/${previewContent.file_path}` : `/api/v1/content/proxy-download?url=${encodeURIComponent(previewContent.media_url || previewContent.cover_url)}`} 
-                controls 
-                style={{ width: '100%', maxHeight: '400px', marginBottom: '15px' }}
-              />
-              
-              {/* 显示所有视频URL */}
-              {previewContent.all_videos && previewContent.all_videos.length > 0 && (
-                <div>
-                  <h5>可用视频链接 ({previewContent.all_videos.length}个):</h5>
-                  <div style={{ backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '8px' }}>
-                    {previewContent.all_videos.map((videoUrl, index) => (
-                      <div key={index} style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'space-between',
-                        padding: '8px 0',
-                        borderBottom: index < previewContent.all_videos.length - 1 ? '1px solid #e8e8e8' : 'none'
-                      }}>
-                        <div style={{ flex: 1 }}>
-                          <span style={{ fontWeight: 'bold' }}>
-                            视频 {index + 1}: 
-                          </span>
-                          <span style={{ fontSize: 12, color: '#999', marginLeft: 8 }}>
-                            {videoUrl.includes('sns-video-hw') ? '主服务器' : 
-                             videoUrl.includes('sns-bak-v1') ? '备用服务器1' :
-                             videoUrl.includes('sns-bak-v6') ? '备用服务器6' : '其他服务器'}
-                          </span>
-                        </div>
-                        <Space>
-                          <Button 
-                            size="small" 
-                            type="link"
-                            onClick={() => window.open(videoUrl, '_blank')}
-                          >
-                            打开链接
-                          </Button>
-                        </Space>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <>
-              {/* 显示所有图片 */}
-              {previewContent.all_images && previewContent.all_images.length > 0 ? (
-                <div>
-                  <h4>图片列表 ({previewContent.all_images.length}张)</h4>
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', 
-                    gap: '10px',
-                    maxHeight: '500px',
-                    overflowY: 'auto',
-                    padding: '10px',
-                    backgroundColor: '#f5f5f5',
-                    borderRadius: '8px'
-                  }}>
-                    {previewContent.all_images.map((imgUrl, index) => (
-                      <div key={index} style={{ textAlign: 'center' }}>
-                        <Image
-                          src={`/api/v1/content/proxy-image?url=${encodeURIComponent(imgUrl)}`}
-                          alt={`图片 ${index + 1}`}
-                          style={{ 
-                            width: '100%', 
-                            height: '150px', 
-                            objectFit: 'cover', 
-                            borderRadius: '4px',
-                            cursor: 'pointer'
-                          }}
-                          fallback="https://via.placeholder.com/150x150?text=加载失败"
-                        />
-                        <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-                          图片 {index + 1}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <Image
-                  src={`/api/v1/content/proxy-image?url=${encodeURIComponent(previewContent.cover_url)}`}
-                  alt={previewContent.title}
-                  style={{ maxWidth: '100%', maxHeight: '400px' }}
-                  fallback="https://via.placeholder.com/400x300?text=图片加载失败"
+            {/* 🎥 视频预览区域 */}
+            {previewContent.all_videos && previewContent.all_videos.length > 0 && (
+              <div>
+                <h4>
+                  🎥 视频预览
+                  <span style={{ color: '#ff4d4f', marginLeft: 8, fontSize: 14 }}>
+                    共 {previewContent.all_videos.length} 个视频
+                  </span>
+                </h4>
+                {/* 主视频预览 */}
+                <video
+                  src={previewContent.file_path ? `/media/${previewContent.file_path}` : `/api/v1/content/proxy-download?url=${encodeURIComponent(previewContent.media_url || previewContent.all_videos[0])}`}
+                  controls
+                  style={{ width: '100%', maxHeight: '400px', borderRadius: 8 }}
                 />
-              )}
-            </>
-          )}
+
+                {/* 多视频缩略图列表 */}
+                {previewContent.all_videos.length > 1 && (
+                  <div style={{ marginTop: 15 }}>
+                    <div style={{ fontSize: 13, color: '#666', marginBottom: 8 }}>更多视频：</div>
+                    <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10 }}>
+                      {previewContent.all_videos.slice(1).map((videoUrl, index) => (
+                        <div
+                          key={index + 1}
+                          style={{
+                            flex: '0 0 auto',
+                            cursor: 'pointer',
+                            borderRadius: 8,
+                            overflow: 'hidden',
+                            border: '2px solid #e8e8e8',
+                            transition: 'all 0.3s'
+                          }}
+                          onClick={() => {
+                            const videoEl = document.querySelector('video');
+                            if (videoEl) {
+                              videoEl.src = `/api/v1/content/proxy-download?url=${encodeURIComponent(videoUrl)}`;
+                            }
+                          }}
+                        >
+                          <video
+                            src={`/api/v1/content/proxy-download?url=${encodeURIComponent(videoUrl)}`}
+                            style={{ width: 120, height: 90, objectFit: 'cover', display: 'block' }}
+                            muted
+                          />
+                          <div style={{ padding: '4px 8px', backgroundColor: '#fff', fontSize: 11, color: '#666', textAlign: 'center' }}>
+                            视频 {index + 2}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 📸 图片预览区域 - 可与视频共存 */}
+            {previewContent.all_images && previewContent.all_images.length > 0 && (
+              <div style={{ marginTop: previewContent.all_videos && previewContent.all_videos.length > 0 ? 15 : 0 }}>
+                <h4>
+                  📸 图片预览
+                  <span style={{ color: '#1890ff', marginLeft: 8, fontSize: 14 }}>
+                    共 {previewContent.all_images.length} 张
+                  </span>
+                </h4>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+                  gap: 10,
+                  maxHeight: '400px',
+                  overflowY: 'auto',
+                  padding: '10px',
+                  backgroundColor: '#fafafa',
+                  borderRadius: '8px'
+                }}>
+                  {previewContent.all_images.map((imgUrl, index) => (
+                    <div key={index} style={{ textAlign: 'center' }}>
+                      <Image
+                        src={`/api/v1/content/proxy-image?url=${encodeURIComponent(imgUrl)}`}
+                        alt={`图片 ${index + 1}`}
+                        style={{
+                          width: '100%',
+                          height: '120px',
+                          objectFit: 'cover',
+                          borderRadius: '6px',
+                          cursor: 'pointer'
+                        }}
+                        fallback="https://via.placeholder.com/120x120?text=加载失败"
+                      />
+                      <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
+                        图片 {index + 1}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 如果没有视频也没有图片，显示封面 */}
+            {(!previewContent.all_videos || previewContent.all_videos.length === 0) &&
+             (!previewContent.all_images || previewContent.all_images.length === 0) && (
+              <Image
+                src={`/api/v1/content/proxy-image?url=${encodeURIComponent(previewContent.cover_url)}`}
+                alt={previewContent.title}
+                style={{ maxWidth: '100%', maxHeight: '400px' }}
+                fallback="https://via.placeholder.com/400x300?text=图片加载失败"
+              />
+            )}
+
             <div style={{ marginBottom: '16px' }}>
               <h4>基本信息</h4>
               <div>作者: {previewContent.author || '未知'}</div>
