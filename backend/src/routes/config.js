@@ -7,25 +7,6 @@ const { authenticate, authorize } = require('../middleware/auth');
 // All routes are protected by authentication
 router.use(authenticate);
 
-// ========== User Management Routes ==========
-// Get all users (admin only)
-router.get('/users', authorize(['admin']), ConfigController.getUsers);
-
-// Create a new user (admin only)
-router.post('/users', authorize(['admin']), ConfigController.createUser);
-
-// Update a user (admin only)
-router.put('/users/:id', authorize(['admin']), ConfigController.updateUser);
-
-// Update user password (admin only)
-router.patch('/users/:id/password', authorize(['admin']), ConfigController.updateUserPassword);
-
-// Delete a user (admin only)
-router.delete('/users/:id', authorize(['admin']), ConfigController.deleteUser);
-
-// Toggle user status (admin only)
-router.patch('/users/:id/status', authorize(['admin']), ConfigController.toggleUserStatus);
-
 // ========== Platform Cookie Management Routes ==========
 // Get all platform cookies
 router.get('/cookies', ConfigController.getCookies);

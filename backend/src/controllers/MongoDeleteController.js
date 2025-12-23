@@ -6,7 +6,6 @@ const logger = require('../utils/logger');
 const Content = require('../models/Content');
 const CrawlTask = require('../models/CrawlTask');
 const TaskLog = require('../models/TaskLog');
-const User = require('../models/User');
 const PlatformAccount = require('../models/PlatformAccount');
 const HotsearchSnapshot = require('../models/HotsearchSnapshot');
 const { SystemSettings, PlatformCookie } = require('../models/Config');
@@ -21,7 +20,6 @@ class MongoDeleteController {
     contents: Content,
     crawltasks: CrawlTask,
     tasklogs: TaskLog,
-    users: User,
     platformaccounts: PlatformAccount,
     hotsearchsnapshots: HotsearchSnapshot,
     systemsettings: SystemSettings,

@@ -1,117 +1,124 @@
-const User = require('../models/User');
+const UserService = require('../services/UserService');
 const { generateToken } = require('../utils/jwt');
 
 class AuthController {
-  // Register new user (admin only)
-  static async register(req, res) {
-    try {
-      const { username, password, role = 'operator' } = req.body;
-      
-      // Check if user already exists
-      const existingUser = await User.findOne({ username });
-      if (existingUser) {
-        return res.status(400).json({ message: 'Username already exists' });
-      }
-      
-      // Create new user
-      const user = new User({
-        username,
-        password_hash: password, // Will be hashed in pre-save hook
-        role,
-        is_active: true
-      });
-      
-      await user.save();
-      
-      // Generate token
-      const token = generateToken(user);
-      
-      res.status(201).json({
-        message: 'User registered successfully',
-        user: {
-          id: user._id,
-          username: user.username,
-          role: user.role,
-          is_active: user.is_active
-        },
-        token
-      });
-    } catch (error) {
-      console.error('Registration error:', error);
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  }
-  
   // Login user
   static async login(req, res) {
     try {
       const { username, password } = req.body;
       
+      // Validate input
+      if (!username || !password) {
+        return res.status(400).json({ message: '用户名和密码不能为空' });
+      }
+      
       // Find user
-      const user = await User.findOne({ username, is_active: true });
-      if (!user) {
-        return res.status(401).json({ message: 'Invalid username or password' });
+      const user = await UserService.findUserByUsername(username);
+      
+      if (!user || !user.is_active) {
+        return res.status(401).json({ message: '用户名或密码错误' });
       }
       
       // Check password
-      const isMatch = await user.comparePassword(password);
+      const isMatch = await UserService.comparePassword(password, user.password_hash);
       if (!isMatch) {
-        return res.status(401).json({ message: 'Invalid username or password' });
+        return res.status(401).json({ message: '用户名或密码错误' });
       }
       
       // Generate token
       const token = generateToken(user);
       
+      // Remove password_hash from response
+      const { password_hash, ...safeUser } = user;
+      
       res.status(200).json({
-        message: 'Login successful',
-        user: {
-          id: user._id,
-          username: user.username,
-          role: user.role,
-          is_active: user.is_active
-        },
-        token
+        message: '登录成功',
+        data: {
+          user: safeUser,
+          token
+        }
       });
     } catch (error) {
       console.error('Login error:', error);
-      res.status(500).json({ message: 'Internal server error' });
+      res.status(500).json({ message: '登录失败，请稍后重试' });
     }
   }
   
-  // Get current user info
-  static async getCurrentUser(req, res) {
+  // Logout user (optional - mainly for token blacklisting if implemented)
+  static async logout(req, res) {
     try {
+      // In a real implementation, you might want to blacklist the token
+      // For now, we'll just return a success message
+      res.status(200).json({ message: '退出登录成功' });
+    } catch (error) {
+      console.error('Logout error:', error);
+      res.status(500).json({ message: '退出登录失败' });
+    }
+  }
+
+  // Check if system has any users (for initial setup)
+  static async checkSystemStatus(req, res) {
+    try {
+      const userCount = await UserService.countUsers();
+      
       res.status(200).json({
-        user: req.user
+        message: '系统状态检查成功',
+        data: {
+          hasUsers: userCount > 0,
+          userCount,
+          needsInitialSetup: userCount === 0
+        }
       });
     } catch (error) {
-      console.error('Get user info error:', error);
-      res.status(500).json({ message: 'Internal server error' });
+      console.error('Check system status error:', error);
+      res.status(500).json({ message: '系统状态检查失败' });
     }
   }
-  
-  // Update user password
-  static async updatePassword(req, res) {
+
+  // Initial system setup (create first admin user)
+  static async initialSetup(req, res) {
     try {
-      const { currentPassword, newPassword } = req.body;
+      const { username, password } = req.body;
       
-      // Find user
-      const user = await User.findById(req.user._id);
-      
-      // Check current password
-      const isMatch = await user.comparePassword(currentPassword);
-      if (!isMatch) {
-        return res.status(400).json({ message: 'Current password is incorrect' });
+      // Check if system already has users
+      const userCount = await UserService.countUsers();
+      if (userCount > 0) {
+        return res.status(400).json({ message: '系统已初始化，无法重复设置' });
       }
       
-      // Update password
-      user.password_hash = newPassword; // Will be hashed in pre-save hook
-      await user.save();
+      // Validate input
+      if (!username || !password) {
+        return res.status(400).json({ message: '用户名和密码不能为空' });
+      }
       
-      res.status(200).json({ message: 'Password updated successfully' });
+      if (password.length < 6) {
+        return res.status(400).json({ message: '密码长度不能少于6位' });
+      }
+      
+      // Create first admin user
+      const user = await UserService.createUser({
+        username,
+        password,
+        role: 'admin',
+        is_active: true
+      });
+      
+      // Generate token
+      const token = generateToken(user);
+      
+      // Remove password_hash from response
+      const { password_hash, ...safeUser } = user;
+      
+      res.status(201).json({
+        message: '系统初始化成功',
+        data: {
+          user: safeUser,
+          token
+        }
+      });
     } catch (error) {
-      console.error('Update password error:', error);
-      res.status(500).json({ message: 'Internal server error' });
+      console.error('Initial setup error:', error);
+      res.status(500).json({ message: '系统初始化失败' });
     }
   }
 }

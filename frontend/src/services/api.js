@@ -144,9 +144,25 @@ const apiService = {
   // Authentication
   auth: {
     login: (data) => api.post('/auth/login', data),
-    register: (data) => api.post('/auth/register', data),
-    getCurrentUser: () => api.get('/auth/me'),
-    updatePassword: (data) => api.put('/auth/password', data)
+    logout: () => api.post('/auth/logout'),
+    checkSystemStatus: () => api.get('/auth/system-status'),
+    initialSetup: (data) => api.post('/auth/initial-setup', data)
+  },
+  
+  // User management
+  users: {
+    // Current user
+    getCurrentUser: () => api.get('/users/me'),
+    updateCurrentUser: (data) => api.put('/users/me', data),
+    changeCurrentUserPassword: (data) => api.put('/users/me/password', data),
+    
+    // Admin user management
+    getAll: () => api.get('/users'),
+    getById: (id) => api.get(`/users/${id}`),
+    create: (data) => api.post('/users', data),
+    update: (id, data) => api.put(`/users/${id}`, data),
+    updatePassword: (id, data) => api.put(`/users/${id}/password`, data),
+    delete: (id) => api.delete(`/users/${id}`)
   },
   
   // Content parsing and management

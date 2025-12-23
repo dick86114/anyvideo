@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { Layout, Menu, ConfigProvider, Select } from 'antd';
+import { Layout, Menu, ConfigProvider, Dropdown, Space, Avatar } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import {
   HomeOutlined,
@@ -8,14 +8,19 @@ import {
   ScheduleOutlined,
   BarChartOutlined,
   SettingOutlined,
-  LoginOutlined
+  UserOutlined,
+  LogoutOutlined,
+  KeyOutlined,
+  TeamOutlined,
+  DownOutlined
 } from '@ant-design/icons';
 import './App.css';
 import { useState } from 'react';
 import { themes } from './config/themes';
 import ThemeSwitcher from './components/ThemeSwitcher';
+import apiService from './services/api';
 
-// Import placeholder pages
+// Import pages
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import ContentParsing from './pages/ContentParsing';
@@ -23,18 +28,33 @@ import ContentManagement from './pages/ContentManagement';
 import TaskManagement from './pages/TaskManagement';
 import HotSearch from './pages/HotSearch';
 import SystemConfig from './pages/SystemConfig';
+import UserManagement from './pages/UserManagement';
+import PersonalProfile from './pages/PersonalProfile';
 
 const { Header, Content, Sider } = Layout;
 
 // Move menuItems outside App component to make it accessible
-const menuItems = [
-  { key: '/dashboard', icon: <HomeOutlined />, label: '仪表盘' },
-  { key: '/parsing', icon: <FileSearchOutlined />, label: '单作品解析' },
-  { key: '/content', icon: <VideoCameraOutlined />, label: '内容管理' },
-  { key: '/tasks', icon: <ScheduleOutlined />, label: '任务调度' },
-  { key: '/hotsearch', icon: <BarChartOutlined />, label: '平台热搜' },
-  { key: '/config', icon: <SettingOutlined />, label: '系统配置' },
-];
+const getMenuItems = (userRole) => {
+  const baseItems = [
+    { key: '/dashboard', icon: <HomeOutlined />, label: '仪表盘' },
+    { key: '/parsing', icon: <FileSearchOutlined />, label: '单作品解析' },
+    { key: '/content', icon: <VideoCameraOutlined />, label: '内容管理' },
+    { key: '/tasks', icon: <ScheduleOutlined />, label: '任务调度' },
+    { key: '/hotsearch', icon: <BarChartOutlined />, label: '平台热搜' },
+    { key: '/config', icon: <SettingOutlined />, label: '系统配置' },
+  ];
+
+  // Add user management for admin users
+  if (userRole === 'admin') {
+    baseItems.push({
+      key: '/users',
+      icon: <TeamOutlined />,
+      label: '用户管理'
+    });
+  }
+
+  return baseItems;
+};
 
 // Protected route component
 const ProtectedRoute = ({ children, isAuthenticated }) => {
@@ -69,14 +89,21 @@ function App() {
   const isAuthenticated = !!currentUser;
 
   // Handle logout
-  const handleLogout = () => {
-    // Clear localStorage
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    // Clear saved credentials for security
-    localStorage.removeItem('savedCredentials');
-    // Update state
-    setCurrentUser(null);
+  const handleLogout = async () => {
+    try {
+      // Call logout API
+      await apiService.auth.logout();
+    } catch (error) {
+      // Ignore logout API errors
+      console.error('Logout API error:', error);
+    } finally {
+      // Clear localStorage regardless of API result
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('savedCredentials');
+      // Update state
+      setCurrentUser(null);
+    }
   };
 
   // RouterWrapper component that has access to router context
@@ -90,6 +117,22 @@ function App() {
       navigate(e.key);
     };
 
+    // User dropdown menu
+    const userMenuItems = [
+      {
+        key: 'profile',
+        icon: <UserOutlined />,
+        label: '个人资料',
+        onClick: () => navigate('/profile')
+      },
+      {
+        key: 'logout',
+        icon: <LogoutOutlined />,
+        label: '退出登录',
+        onClick: handleLogout
+      }
+    ];
+
     return (
       <Layout style={{ minHeight: '100vh' }}>
         {isAuthenticated ? (
@@ -102,7 +145,7 @@ function App() {
                 theme="dark" 
                 mode="inline" 
                 selectedKeys={[location.pathname]}
-                items={menuItems}
+                items={getMenuItems(currentUser?.role)}
                 onClick={handleMenuClick}
               />
             </Sider>
@@ -112,14 +155,14 @@ function App() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                   <ThemeSwitcher currentTheme={currentTheme} onThemeChange={handleThemeChange} />
                   {currentUser && (
-                    <span>欢迎, {currentUser.username}</span>
+                    <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+                      <Space style={{ cursor: 'pointer', color: currentTheme === 'dark' ? '#fff' : '#000' }}>
+                        <Avatar icon={<UserOutlined />} size="small" />
+                        <span>{currentUser.username}</span>
+                        <DownOutlined />
+                      </Space>
+                    </Dropdown>
                   )}
-                  <button
-                    onClick={handleLogout}
-                    style={{ padding: '6px 12px', background: '#1890ff', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                  >
-                    退出登录
-                  </button>
                 </div>
               </Header>
               <Content style={{ margin: 0, padding: 16, minHeight: 280 }}>
@@ -133,6 +176,10 @@ function App() {
                   <Route path="/tasks" element={<ProtectedRoute isAuthenticated={isAuthenticated}><TaskManagement /></ProtectedRoute>} />
                   <Route path="/hotsearch" element={<ProtectedRoute isAuthenticated={isAuthenticated}><HotSearch /></ProtectedRoute>} />
                   <Route path="/config" element={<ProtectedRoute isAuthenticated={isAuthenticated}><SystemConfig /></ProtectedRoute>} />
+                  <Route path="/profile" element={<ProtectedRoute isAuthenticated={isAuthenticated}><PersonalProfile /></ProtectedRoute>} />
+                  {currentUser?.role === 'admin' && (
+                    <Route path="/users" element={<ProtectedRoute isAuthenticated={isAuthenticated}><UserManagement /></ProtectedRoute>} />
+                  )}
                   <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>
               </Content>

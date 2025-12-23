@@ -1,5 +1,5 @@
 const { verifyToken } = require('../utils/jwt');
-const User = require('../models/User');
+const UserService = require('../services/UserService');
 
 // Authenticate user
 const authenticate = async (req, res, next) => {
@@ -16,7 +16,7 @@ const authenticate = async (req, res, next) => {
     if (token.startsWith('mock-token-')) {
       // Create mock user for development
       const mockUser = {
-        _id: 'mock-user-id',
+        id: 'mock-user-id',
         username: 'mock-admin',
         role: 'admin',
         is_active: true
@@ -34,7 +34,7 @@ const authenticate = async (req, res, next) => {
     }
     
     // Get user from database
-    const user = await User.findById(decoded.id).select('-password_hash');
+    const user = await UserService.findUserById(decoded.id);
     if (!user || !user.is_active) {
       return res.status(401).json({ message: 'Unauthorized: User not found or inactive' });
     }

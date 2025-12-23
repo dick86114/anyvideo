@@ -72,6 +72,7 @@ const apiPrefix = process.env.API_PREFIX || '/api/v1';
 
 // Placeholder for routes (will be imported later)
 app.use(`${apiPrefix}/auth`, require('./routes/auth'));
+app.use(`${apiPrefix}/users`, require('./routes/users'));
 app.use(`${apiPrefix}/content`, require('./routes/content'));
 app.use(`${apiPrefix}/tasks`, require('./routes/tasks'));
 app.use(`${apiPrefix}/hotsearch`, require('./routes/hotsearch'));

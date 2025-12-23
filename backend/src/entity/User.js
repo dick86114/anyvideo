@@ -1,5 +1,4 @@
 const { EntitySchema } = require('typeorm');
-const bcrypt = require('bcryptjs');
 
 // User entity schema for TypeORM
 module.exports = new EntitySchema({
@@ -24,7 +23,7 @@ module.exports = new EntitySchema({
     },
     role: {
       type: 'varchar',
-      length: 10,
+      length: 20,
       nullable: false,
       enum: ['admin', 'operator'],
       default: 'operator',
@@ -37,6 +36,15 @@ module.exports = new EntitySchema({
     created_at: {
       type: 'timestamp',
       default: () => 'CURRENT_TIMESTAMP',
+    },
+    updated_at: {
+      type: 'timestamp',
+      default: () => 'CURRENT_TIMESTAMP',
+      onUpdate: 'CURRENT_TIMESTAMP',
+    },
+    deleted_at: {
+      type: 'timestamp',
+      nullable: true,
     },
   },
   indices: [
@@ -54,6 +62,4 @@ module.exports = new EntitySchema({
       columns: ['is_active'],
     },
   ],
-  // TypeORM doesn't support instance methods in JavaScript entity schemas
-  // Password comparison will need to be implemented in the service layer
 });
