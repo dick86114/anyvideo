@@ -118,6 +118,7 @@ Dockerfile
 # Kubernetes
 *.yaml
 *.yml
+!.github/workflows/*.yml
 
 # AWS
 *.tf
