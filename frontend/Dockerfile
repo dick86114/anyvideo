@@ -4,11 +4,13 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+# Install dependencies with verbose output
+RUN npm install --verbose
 
 COPY . ./
 
-RUN npm run build
+# Build with verbose output and progress
+RUN npm run build -- --verbose --progress=plain
 
 FROM nginx:alpine
 
