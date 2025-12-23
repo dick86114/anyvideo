@@ -377,9 +377,58 @@ const ContentParsing = () => {
       
       // Call backend API to parse the link
       const result = await apiService.content.parse({ link });
-      
+
+      console.log('🔍 解析结果完整数据:', JSON.stringify(result, null, 2));
+
       setProgress(50);
-      
+
+      // 提取视频数据的辅助函数
+      const extractVideos = (result) => {
+        // 尝试从多个可能的路径获取视频数据
+        if (result.all_videos && result.all_videos.length > 0) {
+          return result.all_videos;
+        }
+        if (result.data?.all_videos && result.data.all_videos.length > 0) {
+          return result.data.all_videos;
+        }
+        if (result.data?.videos && Array.isArray(result.data.videos)) {
+          return result.data.videos.map(v => v.url || v);
+        }
+        if (result.download_urls?.video && result.download_urls.video.length > 0) {
+          return result.download_urls.video;
+        }
+        if (result.data?.download_urls?.video && result.data.download_urls.video.length > 0) {
+          return result.data.download_urls.video;
+        }
+        return [];
+      };
+
+      // 提取图片数据的辅助函数
+      const extractImages = (result) => {
+        if (result.all_images && result.all_images.length > 0) {
+          return result.all_images;
+        }
+        if (result.data?.all_images && result.data.all_images.length > 0) {
+          return result.data.all_images;
+        }
+        if (result.data?.images && Array.isArray(result.data.images)) {
+          return result.data.images.map(i => i.url || i);
+        }
+        if (result.download_urls?.images && result.download_urls.images.length > 0) {
+          return result.download_urls.images;
+        }
+        if (result.data?.download_urls?.images && result.data.download_urls.images.length > 0) {
+          return result.data.download_urls.images;
+        }
+        return [];
+      };
+
+      const extractedVideos = extractVideos(result);
+      const extractedImages = extractImages(result);
+
+      console.log('🎥 提取到的视频:', extractedVideos);
+      console.log('📸 提取到的图片:', extractedImages);
+
       // Set parsed result with data validation and defaults
       const parsedData = {
         title: result.title || result.data?.title || '未知标题',
@@ -388,8 +437,8 @@ const ContentParsing = () => {
         cover_url: result.cover_url || result.data?.cover_url || 'https://via.placeholder.com/300x200',
         media_type: result.media_type || result.data?.media_type || 'image',
         media_url: result.media_url || result.data?.media_url || 'https://via.placeholder.com/800x600',
-        all_images: result.all_images || result.data?.all_images || [],
-        all_videos: result.all_videos || result.data?.all_videos || [], // 添加视频数组支持
+        all_images: extractedImages,
+        all_videos: extractedVideos,
         has_live_photo: result.has_live_photo || result.data?.has_live_photo || false,
         live_photos: result.live_photos || result.data?.live_photos || [],
         content_id: result.content_id || result.data?.content_id || null,
@@ -628,173 +677,128 @@ const ContentParsing = () => {
                 </div>
               )}
               
-              {/* Preview all images if available and media type is image or live_photo */}
-              {(parsedResult.media_type === 'image' || parsedResult.media_type === 'live_photo') && parsedResult.all_images && parsedResult.all_images.length > 0 && (
+              {/* 🎥 视频预览区域 - 优先显示 */}
+              {parsedResult.all_videos && parsedResult.all_videos.length > 0 && (
                 <div style={{ marginTop: 20, width: '100%' }}>
                   <h4>
-                    图片预览
-                    {parsedResult.has_live_photo && (
-                      <span style={{ color: '#1890ff', marginLeft: 8, fontSize: 14 }}>
-                        🎬 包含实况图片
-                      </span>
-                    )}
+                    🎥 视频预览
+                    <span style={{ color: '#ff4d4f', marginLeft: 8, fontSize: 14 }}>
+                      共 {parsedResult.all_videos.length} 个视频
+                    </span>
                   </h4>
-                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', overflowX: 'auto', padding: 10, backgroundColor: '#f5f5f5', borderRadius: 8 }}>
-                    {parsedResult.all_images.slice(0, 5).map((imgUrl, index) => (
-                      <div key={index} style={{ flex: '0 0 auto' }}>
-                        <img 
-                          src={getProxyImageUrl(imgUrl)} 
-                          alt={`图片 ${index + 1}`} 
-                          style={{ width: 150, height: 150, objectFit: 'cover', borderRadius: 4, cursor: 'pointer' }} 
-                          onClick={() => handlePreview(imgUrl, index)}
-                          onError={handleImageError}
-                        />
-                        <div style={{ textAlign: 'center', marginTop: 5, fontSize: 12, color: '#666' }}>
-                          图片 {index + 1}
-                        </div>
-                      </div>
-                    ))}
-                    {parsedResult.all_images.length > 5 && (
-                      <div 
-                        style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          justifyContent: 'center', 
-                          width: 150, 
-                          height: 150, 
-                          backgroundColor: '#e8e8e8', 
-                          borderRadius: 4,
-                          cursor: 'pointer',
-                          flexDirection: 'column'
-                        }}
-                        onClick={() => {
-                          // Show all images in a grid modal
-                          Modal.info({
-                            title: `所有图片 (${parsedResult.all_images.length}张)`,
-                            width: '90%',
-                            content: (
-                              <div style={{ 
-                                display: 'grid', 
-                                gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', 
-                                gap: 10, 
-                                marginTop: 20 
-                              }}>
-                                {parsedResult.all_images.map((imgUrl, index) => (
-                                  <div key={index} style={{ textAlign: 'center' }}>
-                                    <img 
-                                      src={getProxyImageUrl(imgUrl)} 
-                                      alt={`图片 ${index + 1}`} 
-                                      style={{ 
-                                        width: '100%', 
-                                        height: 150, 
-                                        objectFit: 'cover', 
-                                        borderRadius: 4, 
-                                        cursor: 'pointer' 
-                                      }} 
-                                      onClick={() => handlePreview(imgUrl, index)}
-                                      onError={handleImageError}
-                                    />
-                                    <div style={{ fontSize: 12, color: '#666', marginTop: 5 }}>
-                                      图片 {index + 1}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            ),
-                            okText: '关闭'
-                          });
-                        }}
-                      >
-                        <EyeOutlined style={{ fontSize: 24, color: '#666', marginBottom: 8 }} />
-                        <span style={{ fontSize: 14, color: '#666' }}>查看全部</span>
-                        <span style={{ fontSize: 12, color: '#999' }}>({parsedResult.all_images.length}张)</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-              
-              {/* Video preview if media type is video */}
-              {parsedResult.media_type === 'video' && (
-                <div style={{ marginTop: 20, width: '100%' }}>
-                  <h4>
-                    视频预览
-                    {parsedResult.all_videos && parsedResult.all_videos.length > 1 && (
-                      <span style={{ color: '#ff4d4f', marginLeft: 8, fontSize: 14 }}>
-                        🎥 共 {parsedResult.all_videos.length} 个视频
-                      </span>
-                    )}
-                  </h4>
-                  
-                  {/* 主视频预览 */}
+
+                  {/* 主视频播放器 */}
                   <div style={{ display: 'flex', justifyContent: 'center', backgroundColor: '#f5f5f5', borderRadius: 8, padding: 20, marginBottom: 15 }}>
-                    <video 
-                      src={getProxyVideoUrl(parsedResult.media_url || (parsedResult.all_videos && parsedResult.all_videos[0]) || (parsedResult.file_path ? `/media/${parsedResult.file_path}` : ''))} 
-                      controls 
-                      style={{ maxWidth: '100%', maxHeight: '400px', borderRadius: 4 }} 
+                    <video
+                      src={getProxyVideoUrl(parsedResult.media_url || parsedResult.all_videos[0] || (parsedResult.file_path ? `/media/${parsedResult.file_path}` : ''))}
+                      controls
+                      style={{ maxWidth: '100%', maxHeight: '400px', borderRadius: 4 }}
                       onError={(e) => {
                         console.error('Video load error:', e);
                         message.error('视频加载失败，请检查网络或稍后重试');
                       }}
                     />
                   </div>
-                  
-                  {/* 多视频URL列表 */}
-                  {parsedResult.all_videos && parsedResult.all_videos.length > 0 && (
+
+                  {/* 多视频缩略图列表 */}
+                  {parsedResult.all_videos.length > 1 && (
                     <div style={{ marginTop: 15 }}>
-                      <h5>可用视频链接：</h5>
-                      <div style={{ backgroundColor: '#f9f9f9', padding: 15, borderRadius: 8 }}>
-                        {parsedResult.all_videos.map((videoUrl, index) => (
-                          <div key={index} style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            justifyContent: 'space-between',
-                            padding: '8px 0',
-                            borderBottom: index < parsedResult.all_videos.length - 1 ? '1px solid #e8e8e8' : 'none'
-                          }}>
-                            <div style={{ flex: 1 }}>
-                              <span style={{ fontSize: 14, color: '#666' }}>
-                                视频 {index + 1}: 
-                              </span>
-                              <span style={{ fontSize: 12, color: '#999', marginLeft: 8 }}>
-                                {videoUrl.includes('sns-video-hw') ? '主服务器' : 
-                                 videoUrl.includes('sns-bak-v1') ? '备用服务器1' :
-                                 videoUrl.includes('sns-bak-v6') ? '备用服务器6' : '其他服务器'}
-                              </span>
+                      <div style={{ fontSize: 13, color: '#666', marginBottom: 8 }}>更多视频：</div>
+                      <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10 }}>
+                        {parsedResult.all_videos.slice(1).map((videoUrl, index) => (
+                          <div
+                            key={index + 1}
+                            style={{
+                              flex: '0 0 auto',
+                              cursor: 'pointer',
+                              borderRadius: 8,
+                              overflow: 'hidden',
+                              border: '2px solid #e8e8e8',
+                              transition: 'all 0.3s'
+                            }}
+                            onClick={() => {
+                              // 切换主视频
+                              const videoEl = document.querySelector('video');
+                              if (videoEl) {
+                                videoEl.src = getProxyVideoUrl(videoUrl);
+                              }
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.borderColor = '#1890ff';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.borderColor = '#e8e8e8';
+                            }}
+                          >
+                            <video
+                              src={getProxyVideoUrl(videoUrl)}
+                              style={{ width: 160, height: 120, objectFit: 'cover', display: 'block' }}
+                              muted
+                            />
+                            <div style={{ padding: '6px 10px', backgroundColor: '#fff', fontSize: 12, color: '#666', textAlign: 'center' }}>
+                              视频 {index + 2}
                             </div>
-                            <Space>
-                              <Button 
-                                size="small" 
-                                type="link"
-                                onClick={() => {
-                                  // 在新标签页中打开视频
-                                  window.open(videoUrl, '_blank');
-                                }}
-                              >
-                                打开链接
-                              </Button>
-                              <Button 
-                                size="small" 
-                                type="primary"
-                                onClick={() => {
-                                  // 下载单个视频
-                                  downloadFile(videoUrl, `video_${index + 1}.mp4`);
-                                }}
-                              >
-                                下载
-                              </Button>
-                            </Space>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
-                  
-                  {(!parsedResult.media_url && (!parsedResult.all_videos || parsedResult.all_videos.length === 0)) && (
-                    <div style={{ textAlign: 'center', marginTop: 10, color: '#ff4d4f' }}>
-                      视频URL为空，无法加载视频
-                    </div>
-                  )}
+                </div>
+              )}
+
+              {/* 📸 图片预览区域 - 可与视频共存 */}
+              {parsedResult.all_images && parsedResult.all_images.length > 0 && (
+                <div style={{ marginTop: parsedResult.all_videos && parsedResult.all_videos.length > 0 ? 20 : 0, width: '100%' }}>
+                  <h4>
+                    📸 图片预览
+                    <span style={{ color: '#1890ff', marginLeft: 8, fontSize: 14 }}>
+                      共 {parsedResult.all_images.length} 张
+                    </span>
+                    {parsedResult.has_live_photo && (
+                      <span style={{ color: '#52c41a', marginLeft: 8, fontSize: 13 }}>
+                        🎬 包含实况图片
+                      </span>
+                    )}
+                  </h4>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+                    gap: 12,
+                    padding: 15,
+                    backgroundColor: '#fafafa',
+                    borderRadius: 8
+                  }}>
+                    {parsedResult.all_images.map((imgUrl, index) => (
+                      <div key={index} style={{ textAlign: 'center' }}>
+                        <img
+                          src={getProxyImageUrl(imgUrl)}
+                          alt={`图片 ${index + 1}`}
+                          style={{
+                            width: '100%',
+                            height: 150,
+                            objectFit: 'cover',
+                            borderRadius: 8,
+                            cursor: 'pointer',
+                            border: '2px solid #e8e8e8',
+                            transition: 'all 0.3s'
+                          }}
+                          onClick={() => handlePreview(imgUrl, index)}
+                          onError={handleImageError}
+                          onMouseEnter={(e) => {
+                            e.target.style.borderColor = '#1890ff';
+                            e.target.style.transform = 'scale(1.02)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.borderColor = '#e8e8e8';
+                            e.target.style.transform = 'scale(1)';
+                          }}
+                        />
+                        <div style={{ fontSize: 12, color: '#666', marginTop: 6 }}>
+                          图片 {index + 1}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </Space>
