@@ -1,4 +1,4 @@
-FROM node:18-alpine as build
+FROM node:20-alpine as build
 
 WORKDIR /app
 
@@ -18,8 +18,8 @@ RUN node --version && npm --version
 # Run lint first to catch any syntax errors
 RUN npm run lint || echo "Lint failed, continuing with build"
 
-# Build with verbose output
-RUN npm run build -- --debug --verbose
+# Build with debug output
+RUN npm run build -- --debug
 
 FROM nginx:alpine as production
 
