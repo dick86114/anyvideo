@@ -2,22 +2,24 @@ FROM node:18-alpine as build
 
 WORKDIR /app
 
-# Use a non-root user for security
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nodejs -u 1001
+# Install dependencies for npm ci
+RUN apk add --no-cache git
 
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Use npm ci for deterministic builds
+RUN npm ci
 
 COPY . .
-RUN chown -R nodejs:nodejs /app
 
-USER nodejs
+# Log node and npm versions
+RUN node --version && npm --version
 
-# Build the application
-RUN npm run build
+# Run lint first to catch any syntax errors
+RUN npm run lint || echo "Lint failed, continuing with build"
+
+# Build with verbose output
+RUN npm run build -- --debug --verbose
 
 FROM nginx:alpine as production
 
