@@ -377,9 +377,58 @@ const ContentParsing = () => {
       
       // Call backend API to parse the link
       const result = await apiService.content.parse({ link });
-      
+
+      console.log('🔍 解析结果完整数据:', JSON.stringify(result, null, 2));
+
       setProgress(50);
-      
+
+      // 提取视频数据的辅助函数
+      const extractVideos = (result) => {
+        // 尝试从多个可能的路径获取视频数据
+        if (result.all_videos && result.all_videos.length > 0) {
+          return result.all_videos;
+        }
+        if (result.data?.all_videos && result.data.all_videos.length > 0) {
+          return result.data.all_videos;
+        }
+        if (result.data?.videos && Array.isArray(result.data.videos)) {
+          return result.data.videos.map(v => v.url || v);
+        }
+        if (result.download_urls?.video && result.download_urls.video.length > 0) {
+          return result.download_urls.video;
+        }
+        if (result.data?.download_urls?.video && result.data.download_urls.video.length > 0) {
+          return result.data.download_urls.video;
+        }
+        return [];
+      };
+
+      // 提取图片数据的辅助函数
+      const extractImages = (result) => {
+        if (result.all_images && result.all_images.length > 0) {
+          return result.all_images;
+        }
+        if (result.data?.all_images && result.data.all_images.length > 0) {
+          return result.data.all_images;
+        }
+        if (result.data?.images && Array.isArray(result.data.images)) {
+          return result.data.images.map(i => i.url || i);
+        }
+        if (result.download_urls?.images && result.download_urls.images.length > 0) {
+          return result.download_urls.images;
+        }
+        if (result.data?.download_urls?.images && result.data.download_urls.images.length > 0) {
+          return result.data.download_urls.images;
+        }
+        return [];
+      };
+
+      const extractedVideos = extractVideos(result);
+      const extractedImages = extractImages(result);
+
+      console.log('🎥 提取到的视频:', extractedVideos);
+      console.log('📸 提取到的图片:', extractedImages);
+
       // Set parsed result with data validation and defaults
       const parsedData = {
         title: result.title || result.data?.title || '未知标题',
@@ -388,8 +437,8 @@ const ContentParsing = () => {
         cover_url: result.cover_url || result.data?.cover_url || 'https://via.placeholder.com/300x200',
         media_type: result.media_type || result.data?.media_type || 'image',
         media_url: result.media_url || result.data?.media_url || 'https://via.placeholder.com/800x600',
-        all_images: result.all_images || result.data?.all_images || [],
-        all_videos: result.all_videos || result.data?.all_videos || [], // 添加视频数组支持
+        all_images: extractedImages,
+        all_videos: extractedVideos,
         has_live_photo: result.has_live_photo || result.data?.has_live_photo || false,
         live_photos: result.live_photos || result.data?.live_photos || [],
         content_id: result.content_id || result.data?.content_id || null,
@@ -738,58 +787,7 @@ const ContentParsing = () => {
                       }}
                     />
                   </div>
-                  
-                  {/* 多视频URL列表 */}
-                  {parsedResult.all_videos && parsedResult.all_videos.length > 0 && (
-                    <div style={{ marginTop: 15 }}>
-                      <h5>可用视频链接：</h5>
-                      <div style={{ backgroundColor: '#f9f9f9', padding: 15, borderRadius: 8 }}>
-                        {parsedResult.all_videos.map((videoUrl, index) => (
-                          <div key={index} style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            justifyContent: 'space-between',
-                            padding: '8px 0',
-                            borderBottom: index < parsedResult.all_videos.length - 1 ? '1px solid #e8e8e8' : 'none'
-                          }}>
-                            <div style={{ flex: 1 }}>
-                              <span style={{ fontSize: 14, color: '#666' }}>
-                                视频 {index + 1}: 
-                              </span>
-                              <span style={{ fontSize: 12, color: '#999', marginLeft: 8 }}>
-                                {videoUrl.includes('sns-video-hw') ? '主服务器' : 
-                                 videoUrl.includes('sns-bak-v1') ? '备用服务器1' :
-                                 videoUrl.includes('sns-bak-v6') ? '备用服务器6' : '其他服务器'}
-                              </span>
-                            </div>
-                            <Space>
-                              <Button 
-                                size="small" 
-                                type="link"
-                                onClick={() => {
-                                  // 在新标签页中打开视频
-                                  window.open(videoUrl, '_blank');
-                                }}
-                              >
-                                打开链接
-                              </Button>
-                              <Button 
-                                size="small" 
-                                type="primary"
-                                onClick={() => {
-                                  // 下载单个视频
-                                  downloadFile(videoUrl, `video_${index + 1}.mp4`);
-                                }}
-                              >
-                                下载
-                              </Button>
-                            </Space>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
+
                   {(!parsedResult.media_url && (!parsedResult.all_videos || parsedResult.all_videos.length === 0)) && (
                     <div style={{ textAlign: 'center', marginTop: 10, color: '#ff4d4f' }}>
                       视频URL为空，无法加载视频
