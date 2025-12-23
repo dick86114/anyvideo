@@ -6,7 +6,6 @@ const logger = require('../utils/logger');
 class BackupService {
   constructor() {
     this.backupDir = process.env.BACKUP_DIR || path.join(__dirname, '../../backups');
-    this.mongodbUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/video_all';
     this.retentionDays = parseInt(process.env.BACKUP_RETENTION_DAYS) || 7; // Default: 7 days
   }
 
@@ -29,11 +28,11 @@ class BackupService {
     const hour = String(now.getHours()).padStart(2, '0');
     const minute = String(now.getMinutes()).padStart(2, '0');
     const second = String(now.getSeconds()).padStart(2, '0');
-    return `video_all_${year}${month}${day}_${hour}${minute}${second}.gz`;
+    return `postgresql_backup_${year}${month}${day}_${hour}${minute}${second}.sql`;
   }
 
   /**
-   * Execute mongodump command to backup database
+   * Execute pg_dump command to backup PostgreSQL database
    * @returns {Promise<string>} Path to backup file
    */
   async backupDatabase() {
@@ -42,20 +41,27 @@ class BackupService {
       const backupFilename = this.generateBackupFilename();
       const backupPath = path.join(this.backupDir, backupFilename);
 
-      // Execute mongodump command
+      // Build PostgreSQL connection string
+      const dbHost = process.env.POSTGRES_HOST || 'localhost';
+      const dbPort = process.env.POSTGRES_PORT || '5432';
+      const dbName = process.env.POSTGRES_DATABASE || 'video_all';
+      const dbUser = process.env.POSTGRES_USER || 'postgres';
+      const dbPassword = process.env.POSTGRES_PASSWORD || '';
+
+      // Execute pg_dump command
       await new Promise((resolve, reject) => {
-        const command = `mongodump --uri="${this.mongodbUri}" --gzip --archive="${backupPath}"`;
-        logger.info(`Executing backup command: ${command}`);
+        const command = `PGPASSWORD="${dbPassword}" pg_dump -h ${dbHost} -p ${dbPort} -U ${dbUser} -d ${dbName} > "${backupPath}"`;
+        logger.info(`Executing PostgreSQL backup command`);
         
         const child = exec(command, (error, stdout, stderr) => {
           if (error) {
-            logger.error(`Backup command failed: ${error.message}`);
+            logger.error(`PostgreSQL backup command failed: ${error.message}`);
             return reject(error);
           }
           if (stderr) {
-            logger.warn(`Backup command stderr: ${stderr}`);
+            logger.warn(`PostgreSQL backup command stderr: ${stderr}`);
           }
-          logger.info(`Backup completed successfully: ${backupPath}`);
+          logger.info(`PostgreSQL backup completed successfully: ${backupPath}`);
           resolve(backupPath);
         });
       });
@@ -65,7 +71,7 @@ class BackupService {
 
       return backupPath;
     } catch (error) {
-      logger.error('Failed to backup database:', error);
+      logger.error('Failed to backup PostgreSQL database:', error);
       throw error;
     }
   }
@@ -82,7 +88,7 @@ class BackupService {
       const files = await fs.readdir(this.backupDir);
       
       for (const file of files) {
-        if (file.endsWith('.gz')) {
+        if (file.endsWith('.sql')) {
           const filePath = path.join(this.backupDir, file);
           const fileStats = await fs.stat(filePath);
           
@@ -110,7 +116,7 @@ class BackupService {
       const backupList = [];
 
       for (const file of files) {
-        if (file.endsWith('.gz')) {
+        if (file.endsWith('.sql')) {
           const filePath = path.join(this.backupDir, file);
           const fileStats = await fs.stat(filePath);
           

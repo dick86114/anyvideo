@@ -6,6 +6,12 @@ class HotsearchController {
   // Fetch hotsearch for a specific platform
   static async fetchHotsearch(req, res) {
     try {
+      // Temporarily disable hotsearch functionality to avoid MongoDB timeout
+      return res.status(503).json({ 
+        message: '热搜功能暂时不可用，正在进行系统维护',
+        code: 'HOTSEARCH_MAINTENANCE'
+      });
+      
       const { platform } = req.params;
       if (!platform) {
         return res.status(400).json({ message: '请提供平台名称' });
@@ -25,6 +31,12 @@ class HotsearchController {
   // Fetch hotsearch for all platforms
   static async fetchAllHotsearch(req, res) {
     try {
+      // Temporarily disable hotsearch functionality to avoid MongoDB timeout
+      return res.status(503).json({ 
+        message: '热搜功能暂时不可用，正在进行系统维护',
+        code: 'HOTSEARCH_MAINTENANCE'
+      });
+      
       const results = await HotsearchService.fetchAllHotsearch();
       res.status(200).json({
         message: '所有平台热搜抓取完成',
@@ -39,6 +51,12 @@ class HotsearchController {
   // Get hotsearch by date and platform
   static async getHotsearchByDate(req, res) {
     try {
+      // Temporarily disable hotsearch functionality to avoid MongoDB timeout
+      return res.status(503).json({ 
+        message: '热搜功能暂时不可用，正在进行系统维护',
+        code: 'HOTSEARCH_MAINTENANCE'
+      });
+      
       const { platform } = req.params;
       const { date } = req.query;
       
@@ -76,6 +94,12 @@ class HotsearchController {
   // Get hotsearch trends
   static async getHotsearchTrends(req, res) {
     try {
+      // Temporarily disable hotsearch functionality to avoid MongoDB timeout
+      return res.status(503).json({ 
+        message: '热搜功能暂时不可用，正在进行系统维护',
+        code: 'HOTSEARCH_MAINTENANCE'
+      });
+      
       const { platform } = req.params;
       const { days = 7 } = req.query;
       
@@ -113,9 +137,10 @@ class HotsearchController {
   // Get hotsearch platforms
   static async getHotsearchPlatforms(req, res) {
     try {
-      const platforms = ['douyin', 'xiaohongshu', 'weibo', 'kuaishou', 'bilibili'];
+      // Return empty platforms list during maintenance
+      const platforms = [];
       res.status(200).json({
-        message: '获取平台列表成功',
+        message: '热搜功能暂时不可用，正在进行系统维护',
         data: platforms
       });
     } catch (error) {
@@ -127,6 +152,12 @@ class HotsearchController {
   // Parse content from hotsearch keyword
   static async parseHotsearchContent(req, res) {
     try {
+      // Temporarily disable hotsearch functionality to avoid MongoDB timeout
+      return res.status(503).json({ 
+        message: '热搜功能暂时不可用，正在进行系统维护',
+        code: 'HOTSEARCH_MAINTENANCE'
+      });
+      
       const { platform, keyword } = req.body;
       
       if (!platform || !keyword) {
@@ -171,6 +202,12 @@ class HotsearchController {
   // Get related content for a hotsearch keyword
   static async getHotsearchRelatedContent(req, res) {
     try {
+      // Temporarily disable hotsearch functionality to avoid MongoDB timeout
+      return res.status(503).json({ 
+        message: '热搜功能暂时不可用，正在进行系统维护',
+        code: 'HOTSEARCH_MAINTENANCE'
+      });
+      
       const { keyword, platform } = req.query;
       const { limit = 5 } = req.body;
       

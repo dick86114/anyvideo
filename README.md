@@ -5,6 +5,7 @@
 本系统旨在开发一个功能完备的后台管理系统，为核心用户（内容运营者、管理员）提供一体化的内容资产管理解决方案。系统核心价值在于打通"**热点发现 -> 精准采集 -> 有序存储 -> 可视化管理**"的全流程。
 
 **核心功能模块**：
+
 1.  **单作品解析**：输入任一内容平台链接，系统解析并保存**无水印**的原始媒体文件及元数据。
 2.  **作者作品监控**：创建定时任务，持续监控指定创作者，自动采集其新发布的作品。
 3.  **内容管理与存储**：对所有采集内容进行集中化管理，并按照**清晰的物理存储规则**保存文件。
@@ -16,8 +17,9 @@
 ## 技术栈
 
 ### 后端技术栈
+
 - **框架**: Express.js
-- **数据库**: MongoDB + Mongoose
+- **数据库**: PostgreSQL + TypeORM
 - **认证**: JWT (JSON Web Token)
 - **爬虫**: Puppeteer + Axios
 - **任务调度**: node-cron
@@ -26,15 +28,17 @@
 - **其他**: Cheerio, XLSX, fs-extra
 
 ### 前端技术栈
+
 - **框架**: React 18
 - **构建工具**: Vite
-- **UI组件库**: Ant Design
+- **UI 组件库**: Ant Design
 - **图表库**: Ant Design Charts
-- **HTTP客户端**: Axios
+- **HTTP 客户端**: Axios
 
 ## 系统架构
 
 ### 后端架构
+
 ```
 backend/
 ├── src/
@@ -52,6 +56,7 @@ backend/
 ```
 
 ### 前端架构
+
 ```
 frontend/
 ├── src/
@@ -66,57 +71,68 @@ frontend/
 ## 安装与部署
 
 ### 环境要求
+
 - Node.js >= 16.0.0
-- MongoDB >= 5.0.0
+- PostgreSQL >= 12.0.0
 - Git
 - 推荐使用 PM2 进行生产环境部署
 
 ### 安装步骤
 
 1. **克隆项目**
+
 ```bash
 git clone https://gitea.yangzai.fun:16666/yangzai/videoAll.git
 cd videoAll
 ```
 
 2. **安装后端依赖**
+
 ```bash
 cd backend
 npm install
 ```
 
 3. **配置环境变量**
+
    - 创建 `.env` 文件
+
    ```bash
    cp .env.example .env
    ```
+
    - 编辑 `.env` 文件，配置以下参数：
+
    ```env
    # 服务器配置
    PORT=3000
    NODE_ENV=development
-   
+
    # 数据库配置
-   MONGODB_URI=mongodb://localhost:27017/videoAll
-   
+   POSTGRES_HOST=localhost
+   POSTGRES_PORT=5432
+   POSTGRES_DATABASE=video_all
+   POSTGRES_USER=postgres
+   POSTGRES_PASSWORD=your_password
+
    # JWT 配置
    JWT_SECRET=your_jwt_secret_key
    JWT_EXPIRES_IN=7d
-   
+
    # 加密配置
    ENCRYPTION_KEY=your_encryption_key_here
-   
+
    # 存储配置
    STORAGE_TYPE=local
    STORAGE_ROOT_PATH=./media
-   
+
    # 备份配置
    BACKUP_DIR=./backups
    BACKUP_RETENTION_DAYS=7
-   
+
    # 日志配置
    LOG_LEVEL=info
-   
+
    # 安全配置
    PASSWORD_SALT_ROUNDS=10
    RATE_LIMIT_WINDOW_MS=900000
@@ -124,17 +140,20 @@ npm install
    ```
 
 4. **安装前端依赖**
+
 ```bash
 cd ../frontend
 npm install
 ```
 
 5. **构建前端项目**
+
 ```bash
 npm run build
 ```
 
 6. **启动后端服务**
+
 ```bash
 cd ../backend
 # 开发环境
@@ -147,24 +166,27 @@ pm run start
 
 7. **访问系统**
    - 前端地址：`http://localhost:3000`
-   - 后端API地址：`http://localhost:3000/api/v1`
+   - 后端 API 地址：`http://localhost:3000/api/v1`
    - 默认管理员账号：admin@example.com / admin123
 
 ### 生产环境部署建议
+
 - 使用 Nginx 作为反向代理
 - 配置 HTTPS 证书
-- 启用 MongoDB 认证
+- 启用 PostgreSQL 认证
 - 定期备份数据库
 - 配置日志轮转
 
 ## 使用指南
 
 ### 1. 系统登录
+
 1. 访问 `http://localhost:3000`
 2. 使用默认账号或管理员分配的账号登录
 3. 首次登录建议修改密码
 
 ### 2. 内容解析
+
 1. 进入「内容解析」页面
 2. 在输入框中粘贴内容平台链接
 3. 点击「解析」按钮
@@ -172,6 +194,7 @@ pm run start
 5. 解析完成后可在「内容管理」页面查看
 
 ### 3. 创建作者监控任务
+
 1. 进入「任务管理」页面
 2. 点击「创建任务」按钮
 3. 选择平台类型
@@ -180,6 +203,7 @@ pm run start
 6. 点击「保存」按钮
 
 ### 4. 管理内容资产
+
 1. 进入「内容管理」页面
 2. 使用筛选条件查找特定内容
 3. 点击内容卡片查看详情
@@ -187,45 +211,54 @@ pm run start
 5. 支持批量选择和批量操作
 
 ### 5. 查看热搜数据
+
 1. 进入「热搜管理」页面
 2. 选择平台和日期
 3. 查看热搜榜单
 4. 点击热搜关键词可一键解析相关内容
 
 ### 6. 配置系统参数
+
 1. 进入「系统配置」页面
-2. 配置平台Cookie（提高解析成功率）
+2. 配置平台 Cookie（提高解析成功率）
 3. 管理用户账号
 4. 调整系统设置
 
 ## 配置方法
 
-### 平台Cookie配置
+### 平台 Cookie 配置
+
 1. 登录对应平台
 2. 打开浏览器开发者工具（F12）
 3. 进入「Application」/「Storage」选项卡
-4. 找到对应平台的Cookie
-5. 复制完整Cookie字符串
-6. 进入系统「配置管理」-「Cookie管理」
-7. 添加新的Cookie配置
-8. 定期更新Cookie以保持有效性
+4. 找到对应平台的 Cookie
+5. 复制完整 Cookie 字符串
+6. 进入系统「配置管理」-「Cookie 管理」
+7. 添加新的 Cookie 配置
+8. 定期更新 Cookie 以保持有效性
 
 ### 自定义存储路径
+
 在 `.env` 文件中修改以下配置：
+
 ```env
 STORAGE_PATH=/path/to/your/storage
 TEMP_PATH=/path/to/your/temp
 ```
 
 ### 调整日志级别
+
 在 `.env` 文件中修改：
+
 ```env
 LOG_LEVEL=debug  # 可选：error, warn, info, debug, silly
 ```
 
 ### 配置速率限制
+
 在 `.env` 文件中修改：
-```env
+
+````env
 RATE_LIMIT_WINDOW_MS=900000  # 15分钟
 RATE_LIMIT_MAX=100  # 每个IP最多100请求
 
@@ -417,12 +450,12 @@ npm test
 # 前端测试
 cd frontend
 npm test
-```
+````
 
 ## 常见问题与解决方案
 
 1. **问题**：解析失败
-   **解决方案**：检查平台Cookie是否有效，网络连接是否正常，查看系统日志获取详细错误信息
+   **解决方案**：检查平台 Cookie 是否有效，网络连接是否正常，查看系统日志获取详细错误信息
 
 2. **问题**：监控任务未执行
    **解决方案**：检查任务状态是否为启用，查看任务日志获取详细错误信息，确保系统服务正常运行
@@ -434,47 +467,53 @@ npm test
    **解决方案**：检查存储路径权限，确保文件存在，查看系统日志获取详细错误信息
 
 5. **问题**：登录失败
-   **解决方案**：检查用户名密码是否正确，联系管理员重置密码，检查JWT配置是否正确
+   **解决方案**：检查用户名密码是否正确，联系管理员重置密码，检查 JWT 配置是否正确
 
 ## 贡献指南
 
 ### 开发环境搭建
+
 1. 克隆项目代码
 2. 按照「安装步骤」配置开发环境
 3. 安装依赖
 4. 启动开发服务器
 
 ### 代码规范
+
 - 遵循项目现有的代码风格
-- 使用ESLint和Prettier进行代码检查和格式化
+- 使用 ESLint 和 Prettier 进行代码检查和格式化
 - 为新功能编写测试用例
 - 提交代码前运行测试
 
 ### 提交规范
+
 - 使用语义化提交信息
 - 提交信息格式：`type(scope): description`
 - 例如：`feat(content): add batch delete functionality`
 
 ### 分支管理
+
 - `main`：主分支，用于发布生产版本
 - `develop`：开发分支，用于集成新功能
 - `feature/xxx`：功能分支，用于开发特定功能
-- `fix/xxx`：修复分支，用于修复bug
+- `fix/xxx`：修复分支，用于修复 bug
 
 ### 贡献流程
-1. Fork项目仓库
+
+1. Fork 项目仓库
 2. 创建功能分支
 3. 提交代码
-4. 创建Pull Request
+4. 创建 Pull Request
 5. 代码审查
 6. 合并到主分支
 
 ## 版本更新日志
 
 ### v1.0.0 (2025-12-19)
+
 - 初始版本发布
 - 实现所有核心功能
-- 完善的API文档
+- 完善的 API 文档
 - 支持多平台内容解析
 - 作者监控任务功能
 - 内容管理系统
@@ -512,14 +551,15 @@ SOFTWARE.
 ## 联系方式
 
 如有任何问题或建议，欢迎通过以下方式联系：
+
 - 项目仓库：https://gitea.yangzai.fun:16666/yangzai/videoAll.git
 - 项目文档：https://gitea.yangzai.fun:16666/yangzai/videoAll.git
 
 ## 更新记录
 
 - 2025-12-19：初始版本发布
-- 2025-12-20：完善README文档，添加使用指南和配置方法
-- 2025-12-21：优化API文档，添加贡献指南
+- 2025-12-20：完善 README 文档，添加使用指南和配置方法
+- 2025-12-21：优化 API 文档，添加贡献指南
 
 ## 致谢
 

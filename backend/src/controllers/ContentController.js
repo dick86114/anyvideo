@@ -6,7 +6,6 @@ const path = require('path');
 const CacheService = require('../services/CacheService');
 const xlsx = require('xlsx');
 const axios = require('axios');
-const mongoose = require('mongoose'); // Keep for ObjectId handling
 
 class ContentController {
   // Parse content from link

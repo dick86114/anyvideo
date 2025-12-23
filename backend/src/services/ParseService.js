@@ -1,6 +1,6 @@
 const path = require('path');
 const { exec } = require('child_process');
-const Content = require('../models/Content');
+const { AppDataSource } = require('../utils/db');
 const storageService = require('./StorageService');
 
 class ParseService {

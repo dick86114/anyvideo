@@ -36,31 +36,9 @@ api.interceptors.request.use(
   }
 );
 
-// Simple response cache implementation
-const responseCache = new Map();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-// Generate cache key from request config
-const generateCacheKey = (config) => {
-  const { method, url, params, data } = config;
-  return `${method}:${url}:${JSON.stringify(params || {})}:${JSON.stringify(data || {})}`;
-};
-
-// Response interceptor - handle errors and caching
+// Response interceptor - handle errors
 api.interceptors.response.use(
   (response) => {
-    // Skip caching for content list API to ensure real-time data
-    const isContentListAPI = response.config.url && response.config.url.includes('/content') && response.config.method === 'get';
-    
-    // Cache successful responses for GET requests (except content list)
-    if (response.config.method === 'get' && !isContentListAPI) {
-      const cacheKey = generateCacheKey(response.config);
-      const cacheItem = {
-        data: response.data,
-        timestamp: Date.now()
-      };
-      responseCache.set(cacheKey, cacheItem);
-    }
     return response.data;
   },
   (error) => {
@@ -105,28 +83,9 @@ api.interceptors.response.use(
   }
 );
 
-// Request interceptor - check cache first for GET requests (but skip content list)
+// Request interceptor - add auth token only (no caching)
 api.interceptors.request.use(
   (config) => {
-    // Skip caching for content list API to ensure real-time data
-    const isContentListAPI = config.url && config.url.includes('/content') && config.method === 'get';
-    
-    // Check cache for GET requests (except content list)
-    if (config.method === 'get' && !isContentListAPI) {
-      const cacheKey = generateCacheKey(config);
-      const cachedItem = responseCache.get(cacheKey);
-      
-      if (cachedItem && (Date.now() - cachedItem.timestamp) < CACHE_DURATION) {
-        // Return cached data if it's still valid
-        return Promise.resolve({ data: cachedItem.data });
-      }
-      
-      // Remove expired cache item
-      if (cachedItem) {
-        responseCache.delete(cacheKey);
-      }
-    }
-    
     // Get token from localStorage
     const token = localStorage.getItem('token');
     if (token) {

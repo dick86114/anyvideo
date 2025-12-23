@@ -24,6 +24,7 @@ import {
   LockOutlined
 } from '@ant-design/icons';
 import apiService from '../services/api';
+import ApiDebugger from '../components/ApiDebugger';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -101,7 +102,7 @@ const UserManagement = () => {
       
       if (editingUser) {
         // Update existing user
-        await apiService.users.update(editingUser._id, values);
+        await apiService.users.update(editingUser.id, values);
         message.success('用户更新成功');
       } else {
         // Create new user
@@ -124,7 +125,7 @@ const UserManagement = () => {
     try {
       const values = await passwordForm.validateFields();
       
-      await apiService.users.updatePassword(editingUser._id, {
+      await apiService.users.updatePassword(editingUser.id, {
         newPassword: values.newPassword
       });
       
@@ -158,7 +159,7 @@ const UserManagement = () => {
         <Space>
           <UserOutlined />
           <span>{text}</span>
-          {currentUser && currentUser.id === record._id && (
+          {currentUser && currentUser.id === record.id && (
             <Tag color="blue" size="small">当前用户</Tag>
           )}
         </Space>
@@ -194,7 +195,7 @@ const UserManagement = () => {
       title: '操作',
       key: 'action',
       render: (_, record) => {
-        const isCurrentUser = currentUser && currentUser.id === record._id;
+        const isCurrentUser = currentUser && currentUser.id === record.id;
         const isLastAdmin = record.role === 'admin' && users.filter(u => u.role === 'admin').length === 1;
         const isOnlyUser = users.length === 1;
         
@@ -223,7 +224,7 @@ const UserManagement = () => {
                 isOnlyUser ? "这是最后一个用户账户，无法删除" :
                 "确定要删除这个用户吗？"
               }
-              onConfirm={() => handleDeleteUser(record._id)}
+              onConfirm={() => handleDeleteUser(record.id)}
               okText="确定"
               cancelText="取消"
               disabled={isCurrentUser || isLastAdmin || isOnlyUser}
@@ -246,6 +247,7 @@ const UserManagement = () => {
 
   return (
     <div>
+      <ApiDebugger />
       <Card
         title={
           <Space>
@@ -274,7 +276,7 @@ const UserManagement = () => {
         <Table
           columns={columns}
           dataSource={users}
-          rowKey="_id"
+          rowKey="id"
           loading={loading}
           pagination={{
             showSizeChanger: true,
