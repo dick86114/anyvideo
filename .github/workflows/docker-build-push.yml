@@ -38,11 +38,6 @@ jobs:
           tags: ghcr.io/dick86114/anyvideo-${{ matrix.service }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          # Add build logs verbosity
-          build-args:
-            NODE_ENV=production
           # Enable detailed build logs
-          build-args: |
-            NODE_ENV=production
           secrets: |
             "github_token=${{ secrets.GITHUB_TOKEN }}"
