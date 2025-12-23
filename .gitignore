@@ -112,13 +112,13 @@ coverage/
 .gitlab-ci.yml
 
 # Docker
-Dockerfile
 .dockerignore
 
 # Kubernetes
 *.yaml
 *.yml
 !.github/workflows/*.yml
+!docker-compose.deploy.yml
 
 # AWS
 *.tf
