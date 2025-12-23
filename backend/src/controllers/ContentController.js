@@ -26,7 +26,7 @@ class ContentController {
         return res.status(400).json({ message: '不支持的平台链接' });
       }
       
-      // Return the full parsed result including media_url and all_images
+      // Return the full parsed result including media_url, all_images, and all_videos
       // This is what the frontend expects - directly return parsedData
       res.status(201).json({
         message: '解析成功',
@@ -39,6 +39,12 @@ class ContentController {
         cover_url: parsedData.cover_url,
         media_url: parsedData.media_url, // Ensure media_url is included
         all_images: parsedData.all_images, // Ensure all_images is included
+        all_videos: parsedData.all_videos, // Ensure all_videos is included - NEW
+        has_live_photo: parsedData.has_live_photo, // Include live photo support
+        like_count: parsedData.like_count, // Include interaction stats
+        comment_count: parsedData.comment_count,
+        share_count: parsedData.share_count,
+        tags: parsedData.tags, // Include tags
         source_url: link,
         source_type: 1, // 1-单链接解析
         created_at: new Date()

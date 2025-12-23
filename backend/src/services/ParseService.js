@@ -10,8 +10,16 @@ class ParseService {
   // Parse link from different platforms using Python SDK
   static async parseLink(link) {
     try {
+      // 检测平台并选择合适的SDK命令
+      let sdkCommand = ['parse', link];
+      
+      // 对小红书使用增强解析器
+      if (link.includes('xiaohongshu.com') || link.includes('xhslink.com')) {
+        sdkCommand = ['xiaohongshu_note', link];
+      }
+      
       // 使用Python SDK解析链接
-      const sdkResult = await this.executePythonSDK(['parse', link]);
+      const sdkResult = await this.executePythonSDK(sdkCommand);
       
       // 检查解析结果是否包含错误
       if (sdkResult.error) {
@@ -54,6 +62,32 @@ class ParseService {
 
   // 映射SDK结果到现有格式
   static mapSdkResultToExistingFormat(sdkResult, originalLink) {
+    // 处理增强解析器的响应格式
+    let actualResult = sdkResult;
+    if (sdkResult.success && sdkResult.data) {
+      // 这是增强解析器的响应格式
+      actualResult = sdkResult.data;
+      
+      // 转换videos数组格式
+      if (actualResult.videos && Array.isArray(actualResult.videos)) {
+        actualResult.download_urls = actualResult.download_urls || {};
+        actualResult.download_urls.video = actualResult.videos.map(v => v.url);
+      }
+      
+      // 转换images数组格式
+      if (actualResult.images && Array.isArray(actualResult.images)) {
+        actualResult.download_urls = actualResult.download_urls || {};
+        actualResult.download_urls.images = actualResult.images.map(i => i.url);
+      }
+      
+      // 映射其他字段
+      actualResult.platform = 'xiaohongshu';
+      actualResult.author = actualResult.author?.nickname || actualResult.author || '未知作者';
+      actualResult.like_count = actualResult.interaction_stats?.like_count;
+      actualResult.comment_count = actualResult.interaction_stats?.comment_count;
+      actualResult.share_count = actualResult.interaction_stats?.share_count;
+    }
+    
     // 平台映射
     const platformMap = {
       'xiaohongshu': 'xiaohongshu',
@@ -63,34 +97,41 @@ class ParseService {
       'unknown': 'unknown'
     };
     
-    const platform = platformMap[sdkResult.platform] || 'unknown';
-    const mediaType = sdkResult.media_type || 'unknown';
+    const platform = platformMap[actualResult.platform] || 'unknown';
+    const mediaType = actualResult.media_type || 'unknown';
     
     // 生成文件路径
-    const cleanedAuthor = this.cleanFilename(sdkResult.author || 'unknown');
-    const cleanedTitle = this.cleanFilename(sdkResult.title || 'untitled');
+    const cleanedAuthor = this.cleanFilename(actualResult.author || 'unknown');
+    const cleanedTitle = this.cleanFilename(actualResult.title || 'untitled');
     const fileExt = mediaType === 'video' ? 'mp4' : 'jpg';
-    const contentId = sdkResult.note_id || `sdk_${Date.now()}`;
+    const contentId = actualResult.note_id || `sdk_${Date.now()}`;
     const filePath = path.join(platform, cleanedAuthor, `${contentId}.${fileExt}`);
     
-    // 确定主要媒体URL
+    // 确定主要媒体URL和所有媒体URL
     let mediaUrl = '';
     let allImages = [];
+    let allVideos = [];
     
-    if (sdkResult.download_urls) {
-      // 视频URL优先
-      if (sdkResult.download_urls.video && sdkResult.download_urls.video.length > 0) {
-        mediaUrl = sdkResult.download_urls.video[0];
+    if (actualResult.download_urls) {
+      // 提取所有视频URL
+      allVideos = actualResult.download_urls.video || [];
+      
+      // 视频URL优先作为主媒体URL
+      if (allVideos.length > 0) {
+        mediaUrl = allVideos[0];
       }
-      // 图片URL作为备选，包括普通图片和实况图片
-      allImages = [...(sdkResult.download_urls.images || []), ...(sdkResult.download_urls.live || [])];
+      
+      // 图片URL处理，包括普通图片和实况图片
+      allImages = [...(actualResult.download_urls.images || []), ...(actualResult.download_urls.live || [])];
+      
+      // 如果没有视频，使用图片作为主媒体URL
       if (!mediaUrl && allImages.length > 0) {
         mediaUrl = allImages[0];
       }
     }
     
     // 封面URL处理
-    let coverUrl = sdkResult.cover_url || '';
+    let coverUrl = actualResult.cover_url || '';
     if (!coverUrl && allImages.length > 0) {
       coverUrl = allImages[0];
     }
@@ -98,24 +139,25 @@ class ParseService {
     return {
       platform,
       content_id: contentId,
-      title: sdkResult.title || '未知标题',
-      author: sdkResult.author || '未知作者',
-      description: sdkResult.description || '',
+      title: actualResult.title || '未知标题',
+      author: actualResult.author || '未知作者',
+      description: actualResult.description || '',
       media_type: mediaType,
       cover_url: coverUrl,
       media_url: mediaUrl, // 主要媒体URL
       all_images: allImages, // 所有图片URL
+      all_videos: allVideos, // 所有视频URL - 新增字段
       file_path: filePath, // 生成的文件路径
       source_url: originalLink,
       source_type: 1, // 1-单链接解析
       created_at: new Date(),
       // SDK扩展字段
-      tags: sdkResult.tags || [],
-      like_count: sdkResult.like_count,
-      comment_count: sdkResult.comment_count,
-      share_count: sdkResult.share_count,
-      view_count: sdkResult.view_count,
-      has_live_photo: sdkResult.has_live_photo || false
+      tags: actualResult.tags || [],
+      like_count: actualResult.like_count,
+      comment_count: actualResult.comment_count,
+      share_count: actualResult.share_count,
+      view_count: actualResult.view_count,
+      has_live_photo: actualResult.has_live_photo || false
     };
   }
 

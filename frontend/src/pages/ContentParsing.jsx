@@ -251,12 +251,37 @@ const ContentParsing = () => {
         });
       }
       
-      // Add main media if it's different from images (for video content)
-      if (parsedResult.media_type === 'video' && parsedResult.media_url) {
+      // Add all videos from all_videos array
+      if (parsedResult.all_videos && parsedResult.all_videos.length > 0) {
+        parsedResult.all_videos.forEach((videoUrl, index) => {
+          filesToDownload.push({
+            name: `${folderName}/video_${String(index + 1).padStart(2, '0')}.mp4`,
+            url: videoUrl,
+            type: 'video'
+          });
+        });
+      }
+      
+      // Add main media if it's different from all_videos (fallback for single video)
+      if (parsedResult.media_type === 'video' && parsedResult.media_url && 
+          (!parsedResult.all_videos || parsedResult.all_videos.length === 0)) {
         filesToDownload.push({
           name: `${folderName}/main_video.mp4`,
           url: parsedResult.media_url,
           type: 'video'
+        });
+      }
+      
+      // Add Live Photo videos
+      if (parsedResult.live_photos && parsedResult.live_photos.length > 0) {
+        parsedResult.live_photos.forEach((livePhoto, index) => {
+          if (livePhoto.live_video_url) {
+            filesToDownload.push({
+              name: `${folderName}/live_photo_${String(index + 1).padStart(2, '0')}.mov`,
+              url: livePhoto.live_video_url,
+              type: 'live_video'
+            });
+          }
         });
       }
       
@@ -364,12 +389,37 @@ const ContentParsing = () => {
         media_type: result.media_type || result.data?.media_type || 'image',
         media_url: result.media_url || result.data?.media_url || 'https://via.placeholder.com/800x600',
         all_images: result.all_images || result.data?.all_images || [],
+        all_videos: result.all_videos || result.data?.all_videos || [], // 添加视频数组支持
         has_live_photo: result.has_live_photo || result.data?.has_live_photo || false,
         live_photos: result.live_photos || result.data?.live_photos || [],
         content_id: result.content_id || result.data?.content_id || null,
         source_url: link,
-        file_size: '未知' // Will be calculated from actual file
+        // 增强功能字段
+        like_count: result.like_count || result.data?.like_count || 0,
+        comment_count: result.comment_count || result.data?.comment_count || 0,
+        collect_count: result.collect_count || result.data?.collect_count || 0,
+        share_count: result.share_count || result.data?.share_count || 0,
+        tags: result.tags || result.data?.tags || [],
+        topics: result.topics || result.data?.topics || [],
+        is_original: result.is_original !== false,
+        note_type: result.note_type || result.data?.note_type || 'normal',
+        enhanced: result.enhanced || false
       };
+      
+      // 🎥 改进媒体类型检测逻辑
+      if (parsedData.all_videos && parsedData.all_videos.length > 0) {
+        parsedData.media_type = 'video';
+        console.log(`✅ 检测到视频内容，共 ${parsedData.all_videos.length} 个视频`);
+      } else if (parsedData.media_url && (
+        parsedData.media_url.includes('.mp4') || 
+        parsedData.media_url.includes('video') ||
+        parsedData.media_url.includes('stream')
+      )) {
+        parsedData.media_type = 'video';
+        console.log('✅ 根据media_url检测到视频内容');
+      } else if (parsedData.has_live_photo) {
+        parsedData.media_type = 'live_photo';
+      }
       
       setProgress(100);
       setParsedResult(parsedData);
@@ -514,8 +564,30 @@ const ContentParsing = () => {
                   {parsedResult.all_images && parsedResult.all_images.length > 0 && (
                     <p>图片数量：{parsedResult.all_images.length} 张</p>
                   )}
+                  {parsedResult.all_videos && parsedResult.all_videos.length > 0 && (
+                    <p style={{ color: '#ff4d4f', fontWeight: 'bold' }}>🎥 视频数量：{parsedResult.all_videos.length} 个</p>
+                  )}
                   {parsedResult.has_live_photo && (
                     <p style={{ color: '#1890ff', fontWeight: 'bold' }}>🎬 包含实况图片</p>
+                  )}
+                  {parsedResult.enhanced && (
+                    <div style={{ marginTop: 12, padding: 8, backgroundColor: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: 4 }}>
+                      <p style={{ color: '#52c41a', fontWeight: 'bold', margin: 0 }}>✨ 增强解析成功</p>
+                      <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
+                        {parsedResult.like_count > 0 && <span>👍 {parsedResult.like_count} </span>}
+                        {parsedResult.collect_count > 0 && <span>⭐ {parsedResult.collect_count} </span>}
+                        {parsedResult.comment_count > 0 && <span>💬 {parsedResult.comment_count} </span>}
+                        {parsedResult.share_count > 0 && <span>🔗 {parsedResult.share_count} </span>}
+                      </div>
+                      {parsedResult.tags && parsedResult.tags.length > 0 && (
+                        <div style={{ marginTop: 4 }}>
+                          <span style={{ fontSize: 12, color: '#666' }}>标签：</span>
+                          {parsedResult.tags.map((tag, index) => (
+                            <span key={index} style={{ fontSize: 12, color: '#1890ff', marginRight: 8 }}>#{tag}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   )}
                   <Space size="middle" style={{ marginTop: 16 }}>
                     <Button 
@@ -524,7 +596,13 @@ const ContentParsing = () => {
                       onClick={handleDownload}
                       loading={downloadStatus === 'downloading'}
                     >
-                      下载全部 ({parsedResult.all_images ? parsedResult.all_images.length : 1}个文件)
+                      下载全部 ({
+                        (parsedResult.all_images ? parsedResult.all_images.length : 0) + 
+                        (parsedResult.all_videos ? parsedResult.all_videos.length : 0) + 
+                        (parsedResult.media_type === 'video' && parsedResult.media_url && 
+                         (!parsedResult.all_videos || parsedResult.all_videos.length === 0) ? 1 : 0) + 
+                        (parsedResult.live_photos ? parsedResult.live_photos.filter(p => p.live_video_url).length : 0)
+                      }个文件)
                     </Button>
                   </Space>
                 </div>
@@ -639,10 +717,19 @@ const ContentParsing = () => {
               {/* Video preview if media type is video */}
               {parsedResult.media_type === 'video' && (
                 <div style={{ marginTop: 20, width: '100%' }}>
-                  <h4>视频预览</h4>
-                  <div style={{ display: 'flex', justifyContent: 'center', backgroundColor: '#f5f5f5', borderRadius: 8, padding: 20 }}>
+                  <h4>
+                    视频预览
+                    {parsedResult.all_videos && parsedResult.all_videos.length > 1 && (
+                      <span style={{ color: '#ff4d4f', marginLeft: 8, fontSize: 14 }}>
+                        🎥 共 {parsedResult.all_videos.length} 个视频
+                      </span>
+                    )}
+                  </h4>
+                  
+                  {/* 主视频预览 */}
+                  <div style={{ display: 'flex', justifyContent: 'center', backgroundColor: '#f5f5f5', borderRadius: 8, padding: 20, marginBottom: 15 }}>
                     <video 
-                      src={getProxyVideoUrl(parsedResult.media_url || (parsedResult.file_path ? `/media/${parsedResult.file_path}` : ''))} 
+                      src={getProxyVideoUrl(parsedResult.media_url || (parsedResult.all_videos && parsedResult.all_videos[0]) || (parsedResult.file_path ? `/media/${parsedResult.file_path}` : ''))} 
                       controls 
                       style={{ maxWidth: '100%', maxHeight: '400px', borderRadius: 4 }} 
                       onError={(e) => {
@@ -651,7 +738,59 @@ const ContentParsing = () => {
                       }}
                     />
                   </div>
-                  {!parsedResult.media_url && (
+                  
+                  {/* 多视频URL列表 */}
+                  {parsedResult.all_videos && parsedResult.all_videos.length > 0 && (
+                    <div style={{ marginTop: 15 }}>
+                      <h5>可用视频链接：</h5>
+                      <div style={{ backgroundColor: '#f9f9f9', padding: 15, borderRadius: 8 }}>
+                        {parsedResult.all_videos.map((videoUrl, index) => (
+                          <div key={index} style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'space-between',
+                            padding: '8px 0',
+                            borderBottom: index < parsedResult.all_videos.length - 1 ? '1px solid #e8e8e8' : 'none'
+                          }}>
+                            <div style={{ flex: 1 }}>
+                              <span style={{ fontSize: 14, color: '#666' }}>
+                                视频 {index + 1}: 
+                              </span>
+                              <span style={{ fontSize: 12, color: '#999', marginLeft: 8 }}>
+                                {videoUrl.includes('sns-video-hw') ? '主服务器' : 
+                                 videoUrl.includes('sns-bak-v1') ? '备用服务器1' :
+                                 videoUrl.includes('sns-bak-v6') ? '备用服务器6' : '其他服务器'}
+                              </span>
+                            </div>
+                            <Space>
+                              <Button 
+                                size="small" 
+                                type="link"
+                                onClick={() => {
+                                  // 在新标签页中打开视频
+                                  window.open(videoUrl, '_blank');
+                                }}
+                              >
+                                打开链接
+                              </Button>
+                              <Button 
+                                size="small" 
+                                type="primary"
+                                onClick={() => {
+                                  // 下载单个视频
+                                  downloadFile(videoUrl, `video_${index + 1}.mp4`);
+                                }}
+                              >
+                                下载
+                              </Button>
+                            </Space>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {(!parsedResult.media_url && (!parsedResult.all_videos || parsedResult.all_videos.length === 0)) && (
                     <div style={{ textAlign: 'center', marginTop: 10, color: '#ff4d4f' }}>
                       视频URL为空，无法加载视频
                     </div>
